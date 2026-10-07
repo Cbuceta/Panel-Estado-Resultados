@@ -242,6 +242,69 @@ tr.arrastrando td{opacity:.4}
 tr.drop-antes td{box-shadow:inset 0 3px 0 var(--yellow)!important}
 tr.drop-dentro td{outline:2px dashed var(--yellow);outline-offset:-2px}
 .ajm{font-size:9.5px;font-weight:700;color:var(--yellow);margin-left:4px;vertical-align:super}
+.alertbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:10px 14px;margin:0 0 10px;border-radius:10px;background:#2a1412;border:1px solid #5a2620;border-left:4px solid var(--neg)}
+.alertbar.ok{background:#0f2418;border-color:#1f4a31;border-left-color:var(--pos)}
+.alertbar .ab-t{font-weight:800}
+.alertbar .ab-i{font-size:13px}
+.alertbar .ab-i.muted{color:var(--muted)}
+.alertbar .btn{margin-left:auto;padding:4px 12px}
+td.al-falta{box-shadow:inset 0 0 0 2px var(--neg)!important}
+td.al-var{box-shadow:inset 0 0 0 1px #c98a2a!important}
+.al-mk{display:inline-block;font-size:10.5px;font-weight:800;color:#ffb347;margin-right:6px;font-style:normal}
+td.al-falta .al-mk{color:var(--neg);font-size:12px}
+.al-list{list-style:none;padding:0;margin:6px 0 12px;display:flex;flex-direction:column;gap:6px}
+.al-go{all:unset;cursor:pointer;display:grid;gap:2px;width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #333;border-radius:8px;background:var(--surface2)}
+.al-go:hover{border-color:var(--yellow)}
+.al-it.rev .al-go{opacity:.55}
+.al-n{font-weight:700;font-size:13.5px}
+.al-d{font-size:12.5px;color:#ffb347}
+.al-v{font-size:12.5px;font-variant-numeric:tabular-nums}
+.al-box{padding:8px 10px;border-radius:7px;margin-bottom:8px;font-size:13px;background:#2a1412;border-left:3px solid var(--neg)}
+.al-box.var{background:#2a210f;border-left-color:#c98a2a}
+.al-box.rev{opacity:.7}
+.al-ver{color:var(--yellow)}
+.neg-t{color:var(--neg)} .pos-t{color:var(--pos)}
+.dws.edit label input{display:block;width:100%;margin-top:4px}
+.fab{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:25;background:var(--yellow);color:var(--yellow-ink);border:0;border-radius:99px;padding:10px 16px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.fab:hover{filter:brightness(1.05)}
+.fab .pcount{background:var(--yellow-ink);color:var(--yellow)}
+.pcount{background:var(--yellow);color:var(--yellow-ink);border-radius:99px;font-size:11px;padding:0 7px;margin-left:4px;font-weight:800}
+.lnkx{background:none;border:0;color:var(--ink);text-decoration:underline;cursor:pointer;font-weight:600}
+.ped-row{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 10px}
+.ped-row label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);min-width:160px}
+#dlgPed select,#dlgPed textarea{background:var(--surface2);border:1px solid #3a3a3a;border-radius:7px;color:var(--ink);padding:8px 10px}
+#dlgPed textarea{width:100%;resize:vertical;min-height:80px;font-family:inherit;font-size:14px}
+.ped-lbl{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+.ped-ctx{margin:6px 0 12px;font-size:12px}
+.ped-acc{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.ped-acc .btn{padding:10px 16px}
+.ped-list{border:1px solid #333;border-radius:10px;padding:12px;min-height:90px;display:flex;flex-direction:column;gap:10px;background:#161616}
+.ped-it{border-bottom:1px solid #2a2a2a;padding-bottom:10px}
+.ped-it:last-child{border-bottom:0;padding-bottom:0}
+.ped-it.res{opacity:.5}
+.ped-it.res .ped-t{text-decoration:line-through}
+.ped-h{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px}
+.ped-btns{margin-left:auto;display:flex;gap:4px}
+.ped-tag{font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;background:#2a2a2a}
+.ped-tag.t-error{background:var(--neg-bg);color:var(--neg)} .ped-tag.t-mejora{background:var(--yellow-soft);color:var(--yellow)} .ped-tag.t-idea{background:var(--celeste);color:var(--celeste-ink)}
+.ped-tag.p-alta{background:var(--neg);color:#fff}
+.ped-t{font-size:13.5px;white-space:pre-wrap}
+.ped-n{font-weight:800;color:var(--yellow);font-size:13px}
+.ped-tag.est{background:#2f2f2f;color:var(--ink)}
+.ped-it.e-en-curso .ped-tag.est{background:var(--celeste);color:var(--celeste-ink)}
+.ped-it.e-resuelto .ped-tag.est{background:var(--sync);color:var(--sync-ink)}
+.ped-it.e-resuelto,.ped-it.e-descartado{opacity:.6}
+.ped-resps{margin:6px 0 0 14px;border-left:2px solid #3a3a3a;padding-left:10px;display:flex;flex-direction:column;gap:6px}
+.ped-r.claude{border-left:2px solid var(--yellow);margin-left:-12px;padding-left:10px}
+.ped-rh{font-size:12.5px}
+.ped-form{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+#dlgPed .ped-form textarea,#dlgPed .ped-pegar textarea{min-height:56px}
+.ped-form-b{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.ped-form-b label{font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:center;margin-right:auto}
+.ped-fil{display:flex;gap:6px;margin-bottom:4px}
+.ped-fil .lnk.on{border-color:var(--yellow);color:var(--yellow)}
+.ped-pegar{border:1px dashed var(--yellow);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.ped-prev{font-size:12.5px;margin-top:6px;display:flex;flex-direction:column;gap:2px}
 .pend-mes{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
 .pend-mes:first-of-type{border-top:0;margin-top:0}
 .pend-mes h3{font-size:15px;margin:0 0 4px;display:flex;justify-content:space-between;gap:8px}
@@ -262,6 +325,7 @@ tr.drop-dentro td{outline:2px dashed var(--yellow);outline-offset:-2px}
     <p id="desc">Lo contable sale del export de Odoo; las líneas celestes se cargan desde su propia fuente. Los meses congelados quedan fijos.</p>
   </div></div>
   <div class="g" style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn ghost" id="btnPedidos" type="button">Pedidos de mejora <span class="pcount" id="pedCount" hidden></span></button>
     <button class="btn ghost" id="btnRecargar" title="Volver a leer la base">↻ Actualizar</button>
   </div>
 </header>
@@ -292,6 +356,7 @@ tr.drop-dentro td{outline:2px dashed var(--yellow);outline-offset:-2px}
   <span><i class="sw frozen"></i>Mes congelado</span>
 </div>
 <div class="status" id="statusBox"><span class="conn" id="conn">Conectando…</span><span class="conn" id="chqAuto"></span><span id="status" role="status"></span></div>
+<div class="alertbar" id="alertBar" hidden></div>
 <div class="tablebox"><table class="eerr" id="tbl"><thead></thead><tbody></tbody></table></div>
 <div class="grid2">
   <section class="panel" id="detalle"></section>
@@ -339,6 +404,22 @@ tr.drop-dentro td{outline:2px dashed var(--yellow);outline-offset:-2px}
   <div class="df"><button class="btn ghost" value="cancel">Cancelar</button><button class="btn" value="ok" id="chqOk">Aplicar a los meses marcados</button></div>
 </form></dialog>
 
+<button type="button" class="fab" id="fabPedido" title="Anotar un error, mejora o idea">✎ Pedido de mejora <span class="pcount" id="fabCount" hidden></span></button>
+<dialog id="dlgPed" aria-labelledby="dlgPedT" style="width:min(720px,96vw)">
+  <div class="dh" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h2 id="dlgPedT">Pedidos de mejora</h2><button type="button" class="lnkx" id="pedCerrar">Cerrar</button></div>
+  <div class="db">
+    <p class="sub" style="color:var(--ink);opacity:.85">Anotá acá lo que encuentres mientras usás el panel: errores, mejoras o ideas. Se guarda con la pantalla en la que estabas. Después tocá <strong>Copiar pendientes</strong> y pegalo en la conversación con Claude para resolverlos juntos.</p>
+    <div class="ped-row"><label>Tipo<select id="pedTipo"><option>Mejora</option><option>Error</option><option>Idea</option></select></label>
+      <label>Prioridad<select id="pedPrio"><option>Baja</option><option selected>Normal</option><option>Alta</option></select></label></div>
+    <label class="ped-lbl" for="pedTxt">Qué pasa o qué necesitás</label>
+    <textarea id="pedTxt" rows="4" placeholder="ej. en la lupa de CMV quiero ver también la cantidad vendida por producto"></textarea>
+    <p class="sub ped-ctx" id="pedCtx"></p>
+    <div class="ped-acc"><span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost" id="pedCopiar">Copiar pendientes (0)</button><button type="button" class="btn ghost" id="pedPegarBtn">Pegar respuesta de Claude</button></span><button type="button" class="btn" id="pedGuardar">Guardar pedido</button></div>
+    <div class="ped-pegar" id="pedPegar" hidden><label class="ped-lbl" for="pegTxt">Pegá acá la respuesta de Claude. Se toman las líneas que empiezan con <b>#número</b>, por ejemplo: <span class="code">#3 | Resuelto | Se agregó la cantidad vendida en la lupa de CMV</span></label>
+      <textarea id="pegTxt" rows="4"></textarea><div id="pegPrev" class="ped-prev"></div><div style="display:flex;justify-content:flex-end;margin-top:8px"><button type="button" class="btn" id="pegOk">Aplicar respuestas</button></div></div>
+    <div class="ped-list" id="pedList"></div>
+  </div>
+</dialog>
 <dialog id="dlgCmv" aria-labelledby="dlgCmvT" style="width:min(860px,96vw)"><form method="dialog">
   <div class="dh"><h2 id="dlgCmvT">Importar CMV (Estadísticas de facturas)</h2><p class="sub" id="cmvInfo"></p></div>
   <div class="db" id="cmvBody"></div>
@@ -456,7 +537,8 @@ async function guardar(cambios){ // {id: doc}
   try{ await store.guardar(lista); }
   catch(e){ st("No se pudo guardar en "+store.nombre+": "+e.message,true); throw e; }
 }
-function tomarConfig(){ const c=docs.config; delete docs.config; CONFIG=c&&c.ubicacion?c:{ubicacion:{}}; armarEstructura(); }
+let PEDIDOS=[];
+function tomarConfig(){ const pd=docs.pedidos; delete docs.pedidos; PEDIDOS=(pd&&pd.lista)||[]; actualizarPedCount(); const c=docs.config; delete docs.config; CONFIG={ubicacion:{},...(c||{})}; if(!CONFIG.ubicacion) CONFIG.ubicacion={}; armarEstructura(); }
 async function guardarConfig(nueva){
   const prev=CONFIG; CONFIG=nueva; armarEstructura(); render();
   try{ await store.guardar([{id:"config",valor:{...nueva,actualizadoPor:usuario(),actualizadoEn:new Date().toISOString()}}]); }
@@ -474,9 +556,9 @@ async function moverLinea(id,bloque,antesDe){
   }
   const ub={}; EST.forEach(s=>{ if(s.l&&!BLOQUE_FIJO.has(s.b)) ub[s.b]=s.l.map(x=>x.id).filter(x=>x!==id); });
   const arr=ub[bloque]; const i=antesDe?arr.indexOf(antesDe):-1; if(i>=0) arr.splice(i,0,id); else arr.push(id);
-  await guardarConfig({ubicacion:ub}); st(`"${l.n}" ahora está en ${destino.t}.`);
+  await guardarConfig({...CONFIG,ubicacion:ub}); st(`"${l.n}" ahora está en ${destino.t}.`);
 }
-async function restablecerEstructura(){ if(!confirm("¿Volver todas las líneas a su ubicación original?")) return; await guardarConfig({ubicacion:{}}); st("Ubicación de líneas restablecida."); }
+async function restablecerEstructura(){ if(!confirm("¿Volver todas las líneas a su ubicación original?")) return; await guardarConfig({...CONFIG,ubicacion:{}}); st("Ubicación de líneas restablecida."); }
 async function cargarTodo(){
   try{
     docs=await remoto.cargar(); store=remoto; tomarConfig();
@@ -569,6 +651,7 @@ function programarResumen(){
   },1500);
 }
 
+
 /* ---------- Render ---------- */
 function renderUnidades(){
   $("#unidades").innerHTML=[...UNIDADES.map(x=>[x.id,x.n]),['cons','Consolidado'],['ayuda','Ayuda']].map(([id,n])=>`<button data-unidad="${id}" aria-pressed="${id==='ayuda'?vista==='ayuda':(vista==='eerr'&&unidad===id)}"${id==='ayuda'?' style="margin-left:auto"':''}>${esc(n)}</button>`).join("");
@@ -584,6 +667,7 @@ function render(){
   const th=$("#tbl thead"), tb=$("#tbl tbody");
   if(!ids.length){ th.innerHTML=""; tb.innerHTML=`<tr><td class="empty">Todavía no hay meses cargados para ${esc(nombreUnidad(unidad))}. ${unidad==='cons'?'':'Importá un export de Odoo para empezar.'}</td></tr>`; renderFuentes([],{}); renderDetalle(); return; }
   const C={}; ids.forEach(m=>C[m]=calcMes(unidad,m));
+  ALERTAS={}; ids.forEach(m=>{ if(estadoMes(unidad,m)!=="congelado") ALERTAS[m]=alertasMes(unidad,m,C); });
   th.innerHTML="<tr><th>Cuenta</th>"+ids.map(m=>{
     const es=estadoMes(unidad,m), fr=es==="congelado";
     const e= fr? "Congelado" : (C[m].pend? `Abierto, faltan ${C[m].pend}`:"Abierto, completo");
@@ -603,14 +687,75 @@ function render(){
   });
   tb.innerHTML=h;
   renderKpis(ids,C); renderFuentes(ids,C); renderDetalle();
-  if(lupaRef&&!$("#lupa").hidden){ if(ids.includes(lupaRef.m)) abrirLupa(lupaRef.m,lupaRef.kind,lupaRef.id); else cerrarLupa(); }
+  renderAlertBar(ids);
+  if(lupaRef&&!$("#lupa").hidden){ if(!ids.includes(lupaRef.m)) cerrarLupa(); else if(lupaRef.kind==="alertas") abrirAlertas(lupaRef.m); else abrirLupa(lupaRef.m,lupaRef.kind,lupaRef.id); }
 }
 function editable(m,l){ const d=getDoc(unidad,m); return unidad!=='cons' && l.s!=="formula" && d && d.estado!=="congelado" && (l.s!=="odoo"||!tieneOdoo(d)); }
+/* ---------- Alertas ---------- */
+let ALERTAS={};
+const umbral=()=>({pct:(CONFIG.alertas&&CONFIG.alertas.pct)||30, monto:(CONFIG.alertas&&CONFIG.alertas.monto)||500000});
+function alertasMes(u,m,Cache){
+  const asc=mesesDe(u).slice().sort(), i=asc.indexOf(m); if(i<1) return {};
+  const prev=asc.slice(Math.max(0,i-3),i).reverse(); const cm=(Cache&&Cache[m])||calcMes(u,m);
+  const cp=prev.map(pm=>(Cache&&Cache[pm])||calcMes(u,pm)); const U=umbral(); const out={};
+  const rev=u==='cons'?{}:((getDoc(u,m)||{}).revisadas||{});
+  Object.values(LINEAS).forEach(l=>{ if(l.s==="formula") return;
+    const v=cm.lin[l.id].v, pv=cp.map(c=>c.lin[l.id].v); const p=pv[0];
+    const nz=pv.filter(x=>x!=null&&Math.abs(x)>=1).length; const prom=nz?pv.filter(x=>x!=null).reduce((a,b)=>a+b,0)/pv.filter(x=>x!=null).length:0;
+    let a=null;
+    if((v==null||Math.abs(v)<1)&&pv.length>=2&&nz===pv.length) a={tipo:"falta",cero:v!=null,txt:`Siempre tiene valor (prom. ${fmtM.format(Math.abs(prom)/1e6)}M) y este mes ${v==null?"está pendiente":"da cero"}`};
+    else if(v!=null&&p!=null&&Math.abs(v)>=1){ const d=v-p, rel=Math.abs(p)>=1?Math.abs(d)/Math.abs(p)*100:Infinity, sube=Math.abs(v)>Math.abs(p);
+      if(Math.abs(d)>=U.monto&&rel>=U.pct) a={tipo:"var",d,rel,sube,txt:Math.abs(p)<1?`Apareció este mes (el anterior dio cero)`:`${sube?"Subió":"Bajó"} ${Math.round(Math.abs(Math.abs(v)-Math.abs(p))/Math.abs(p)*100)}% contra ${nombreMes(prev[0])} (${fmtM.format(Math.abs(p)/1e6)}M → ${fmtM.format(Math.abs(v)/1e6)}M)`}; }
+    if(a){ a.id=l.id; a.v=v; a.p=p; a.prev=prev; a.pv=pv; a.prom=prom; a.rev=rev[l.id]||null; out[l.id]=a; } });
+  return out;
+}
+function mesFoco(ids){ const ab=ids.filter(m=>estadoMes(unidad,m)!=="congelado"); return (sel&&ab.includes(sel))?sel:ab[0]; }
+function renderAlertBar(ids){
+  const el=$("#alertBar"); const m=mesFoco(ids); if(!m||!ALERTAS[m]){ el.hidden=true; return; }
+  const al=Object.values(ALERTAS[m]).filter(a=>!a.rev), f=al.filter(a=>a.tipo==="falta"&&a.cero), fp=al.filter(a=>a.tipo==="falta"&&!a.cero), v=al.filter(a=>a.tipo==="var"), rv=Object.values(ALERTAS[m]).filter(a=>a.rev).length;
+  el.hidden=false; el.className="alertbar"+(al.length?"":" ok");
+  el.innerHTML= al.length
+    ? `<span class="ab-t">⚠ ${nombreMes(m)}</span>${f.length?`<span class="ab-i"><b>${f.length}</b> en cero que siempre tienen valor: ${f.slice(0,4).map(a=>esc(LINEAS[a.id].n)).join(", ")}${f.length>4?"…":""}</span>`:""}${fp.length?`<span class="ab-i"><b>${fp.length}</b> habituales sin cargar</span>`:""}${v.length?`<span class="ab-i"><b>${v.length}</b> ${v.length===1?"variación fuerte":"variaciones fuertes"} vs mes anterior</span>`:""}${rv?`<span class="ab-i muted">${rv} revisadas</span>`:""}<button class="btn ghost" type="button" data-alertas="${m}">Ver alertas</button>`
+    : `<span class="ab-t">✓ ${nombreMes(m)}</span><span class="ab-i">Sin faltantes ni variaciones fuertes${rv?` (${rv} revisadas)`:""}.</span><button class="btn ghost" type="button" data-alertas="${m}">Ver detalle</button>`;
+}
+function abrirAlertas(m){
+  lupaRef={m,kind:"alertas",id:""}; const al=Object.values(ALERTAS[m]||{}); const U=umbral();
+  const item=a=>`<li class="al-it${a.rev?" rev":""}"><button type="button" class="al-go" data-go="${m}|l|${a.id}"><span class="al-n">${esc(LINEAS[a.id].n)} <span class="code">${esc(EST.find(s=>s.b===LINEAS[a.id].b).t)}</span></span><span class="al-d">${esc(a.txt)}</span><span class="al-v">${a.v==null?"pendiente":fmtP.format(a.v)} <span class="code">antes ${a.p==null?"–":fmtP.format(a.p)}</span></span>${a.rev?`<span class="code">Revisado por ${esc(a.rev.por)}${a.rev.nota?": "+esc(a.rev.nota):""}</span>`:""}</button></li>`;
+  const f=al.filter(a=>a.tipo==="falta"&&a.cero), fp=al.filter(a=>a.tipo==="falta"&&!a.cero), v=al.filter(a=>a.tipo==="var").sort((x,y)=>Math.abs(y.d)-Math.abs(x.d));
+  let h=`<p class="sub">Se compara cada línea contra los meses anteriores de ${esc(nombreUnidad(unidad))}. Tocá una para ver su evolución, cargarla o marcarla como revisada.</p>`;
+  h+=`<h4>En cero, pero siempre tienen valor (${f.length})</h4>`+(f.length?`<ul class="al-list">${f.map(item).join("")}</ul>`:`<p class="sub">Ninguno.</p>`);
+  h+=`<h4>Habituales todavía sin cargar (${fp.length})</h4>`+(fp.length?`<ul class="al-list">${fp.map(item).join("")}</ul>`:`<p class="sub">Ninguno.</p>`);
+  h+=`<h4>Variaciones fuertes vs mes anterior (${v.length})</h4>`+(v.length?`<ul class="al-list">${v.map(item).join("")}</ul>`:`<p class="sub">Ninguna.</p>`);
+  h+=`<section class="dws edit"><h3>Umbrales de variación</h3><p class="sub">Alerta cuando la diferencia contra el mes anterior supera los dos valores a la vez. Se guarda para todo el equipo.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><label class="sub" style="flex:1">% mínimo<input id="umPct" inputmode="decimal" value="${U.pct}"></label><label class="sub" style="flex:2">Monto mínimo ($)<input id="umMonto" inputmode="decimal" value="${fmtP.format(U.monto)}"></label></div>
+    <div class="row"><button class="btn" type="button" id="umOk">Guardar umbrales</button></div></section>`;
+  $("#lupaK").textContent=`${nombreMes(m)} · ${nombreUnidad(unidad)}`; $("#lupaT").textContent="Alertas del mes"; $("#lupaB").innerHTML=h; $("#lupa").hidden=false;
+  $("#umOk").onclick=async()=>{ const pc=parseNum($("#umPct").value), mo=parseNum($("#umMonto").value); if(!pc||!mo||Number.isNaN(pc)||Number.isNaN(mo)){st("Umbrales inválidos.",true);return;}
+    await guardarConfig({...CONFIG,alertas:{pct:pc,monto:mo}}); st(`Umbrales guardados: ${pc}% y $${fmtP.format(mo)}.`); };
+}
+function seccionEvolucion(m,l){
+  const u=unidad, asc=mesesDe(u).slice().sort(), i=asc.indexOf(m); const ms=asc.slice(Math.max(0,i-4),i+1).reverse();
+  const vals=ms.map(x=>valor(u,x,l).v); const a=(ALERTAS[m]||{})[l.id];
+  let h=`<section class="dws"><h3>Evolución</h3>`;
+  if(a) h+=`<div class="al-box ${a.tipo}${a.rev?" rev":""}"><b>${a.tipo==="falta"?"⚠ Falta":"⚠ Variación fuerte"}</b> ${esc(a.txt)}${a.rev?`<br><span class="code">Revisado por ${esc(a.rev.por)} el ${new Date(a.rev.en).toLocaleString("es-AR")}${a.rev.nota?": "+esc(a.rev.nota):""}</span>`:""}</div>`;
+  h+=`<div class="det"><table><tbody>${ms.map((x,j)=>{const v=vals[j], pv=vals[j+1]; const d=v!=null&&pv!=null?v-pv:null;
+    return `<tr${x===m?' class="tot"':""}><td>${nombreMes(x)}</td><td class="num">${v==null?"pendiente":fmtP.format(v)}</td><td class="num">${d==null||Math.abs(d)<1?"":`<span class="${d<0?"neg-t":"pos-t"}">${d>0?"+":""}${fmtM.format(d/1e6)}M</span>`}</td></tr>`;}).join("")}</tbody></table></div>`;
+  if(a&&u!=='cons'&&estadoMes(u,m)!=="congelado") h+= a.rev ? `<div class="row" style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn ghost" type="button" id="revOff">Volver a alertar</button></div>`
+    : `<div style="margin-top:8px"><input id="revNota" placeholder="Nota (opcional): por qué está bien" style="width:100%;padding:7px 9px;border:1px solid #3a3a3a;border-radius:7px;background:var(--paper);color:var(--ink)"><div class="row" style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn ghost" type="button" id="revOn">Marcar como revisado</button></div></div>`;
+  return h+`</section>`;
+}
+async function marcarRevisado(m,id,on){
+  const d=getDoc(unidad,m); const rv={...(d.revisadas||{})};
+  if(on) rv[id]={por:usuario(),en:new Date().toISOString(),nota:($("#revNota")?$("#revNota").value.trim():"")}; else delete rv[id];
+  try{ await guardar({[unidad+':'+m]:{...d,revisadas:rv}}); st(on?"Marcado como revisado.":"Vuelve a alertar."); }catch(_){}
+}
 function celdaLinea(m,l,C){
   const x=C[m].lin[l.id];
   const cls= x.src==="cons" ? (x.parcial?"src-pend":"") : "src-"+x.src;
   const txt= x.v==null?"pendiente":fmt(x.v,C[m].blo.ventas)+(x.parcial?'<span class="parcial">●</span>':"")+(x.aj?'<span class="ajm" title="Incluye ajustes manuales">+aj</span>':"");
-  return `<td class="num ${cls}${editable(m,l)?" edit":""}" data-c="${m}|l|${l.id}" tabindex="0" role="button" aria-label="Ver qué toma ${esc(l.n)} en ${nombreMes(m)}" title="${esc(srcTxt(x,l))}">${txt}</td>`;
+  const al=(ALERTAS[m]||{})[l.id]; const alc=al&&!al.rev?(al.tipo==="falta"?" al-falta":" al-var"):"";
+  const mk=al&&!al.rev?(al.tipo==="falta"?'<span class="al-mk" title="Falta un concepto que siempre está">⚠</span>':`<span class="al-mk" title="${esc(al.txt)}">${al.rel===Infinity?"nuevo":(al.sube?"▲":"▼")+Math.min(999,Math.round(Math.abs(Math.abs(al.v)-Math.abs(al.p))/Math.abs(al.p)*100))+"%"}</span>`):"";
+  return `<td class="num ${cls}${alc}${editable(m,l)?" edit":""}" data-c="${m}|l|${l.id}" tabindex="0" role="button" aria-label="Ver qué toma ${esc(l.n)} en ${nombreMes(m)}" title="${esc(srcTxt(x,l))}">${mk}${txt}</td>`;
 }
 function renderKpis(ids,C){
   const el=$("#kpis"); if(!ids.length){el.innerHTML="";return;}
@@ -620,7 +765,7 @@ function renderKpis(ids,C){
   const fr=estadoMes(unidad,m)==="congelado";
   const card=(cls,t,v,s)=>`<div class="kpi ${cls}"><span class="t">${t}</span><span class="v ${v<0?"neg":v>0?"pos":""}">${v<0?"-":""}$${fmtP.format(Math.abs(v))}</span><span class="s">${s}</span></div>`;
   el.innerHTML=
-    card("hero",`Resultado final · ${nombreMes(m)}`,c.sub.final,`${pct(c.sub.final)} de ventas ${delta(c.sub.final,cp&&cp.sub.final)} ${fr?"· congelado":c.pend?`<span class="badge">● ${c.pend} pendientes</span>`:""}`)+
+    card("hero",`Resultado final · ${nombreMes(m)}`,c.sub.final,`${pct(c.sub.final)} de ventas ${delta(c.sub.final,cp&&cp.sub.final)} ${fr?"· congelado":c.pend?`<span class="badge">● ${c.pend} pendientes</span>`:""} ${(()=>{const n=Object.values(ALERTAS[m]||{}).filter(a=>!a.rev).length; return n?`<span class="badge" data-alertas="${m}" style="cursor:pointer">⚠ ${n} alertas</span>`:"";})()}`)+
     card("","Ventas netas",ventas,delta(ventas,cp&&cp.blo.ventas)||"&nbsp;")+
     card("","Ganancia bruta",c.sub.bruta,`margen ${pct(c.sub.bruta)} ${delta(c.sub.bruta,cp&&cp.sub.bruta)}`)+
     card("","EBITDA",c.sub.ebitda,`${pct(c.sub.ebitda)} de ventas ${delta(c.sub.ebitda,cp&&cp.sub.ebitda)}`);
@@ -731,6 +876,7 @@ function abrirLupa(m,kind,id){
       if(editable(m,l)){ const d=getDoc(unidad,m), cur=(d.manual||{})[id];
         h+=`<section class="dws edit"><h3>Corregir a mano</h3><label for="lupaIn" class="sub">Importe (los gastos en negativo). Vacío = pendiente.</label><input id="lupaIn" inputmode="decimal" value="${cur!=null?String(cur).replace(".",","):""}" placeholder="-1.234.567,89"><div class="row"><button class="btn" id="lupaOk">Guardar</button></div>${(d.origen||{})[id]&&(d.origen||{})[id]!=="manual"?`<p class="sub">Ojo: la próxima sincronización de la fuente lo vuelve a pisar.</p>`:""}</section>`; }
     }
+    if(l.s!=="formula"){ h+=seccionEvolucion(m,l); const a0=(ALERTAS[m]||{})[id]; if(a0&&!a0.rev) h=`<div class="al-box ${a0.tipo}"><b>⚠ ${a0.tipo==="falta"?"Falta":"Variación fuerte"}</b> ${esc(a0.txt)}. <a href="#" class="al-ver" onclick="document.querySelector('#lupaB .dws:has(.al-box)')?.scrollIntoView({behavior:'smooth'});return false;">Ver evolución</a></div>`+h; }
     if(!BLOQUE_FIJO.has(LINEAS[id].b)){
       h+=`<section class="dws"><h3>Ubicación</h3><p class="sub">Está en <strong>${esc(EST.find(s=>s.b===LINEAS[id].b).t)}</strong>. También podés arrastrarla desde el ⠿ en la tabla.</p><div class="row" style="display:flex;gap:6px;flex-wrap:wrap"><select id="lupaMov" style="flex:1;min-width:180px;background:var(--paper);border:1px solid #3a3a3a;border-radius:7px;padding:7px;color:var(--ink)">${EST.filter(s=>s.l&&!BLOQUE_FIJO.has(s.b)).map(s=>`<option value="${s.b}" ${s.b===LINEAS[id].b?"selected":""}>${esc(s.t)}</option>`).join("")}</select><button class="btn ghost" id="lupaMovOk">Mover</button></div></section>`;
     }
@@ -745,6 +891,7 @@ function abrirLupa(m,kind,id){
   $("#lupaK").textContent=k; $("#lupaT").textContent=titulo; $("#lupaB").innerHTML=h; $("#lupa").hidden=false;
   document.querySelectorAll("td.lupa-on").forEach(x=>x.classList.remove("lupa-on"));
   const td=document.querySelector(`td[data-c="${m}|${kind}|${id}"]`); if(td) td.classList.add("lupa-on");
+  const ro=$("#revOn"); if(ro) ro.onclick=()=>marcarRevisado(m,id,true); const rf=$("#revOff"); if(rf) rf.onclick=()=>marcarRevisado(m,id,false);
   const ajb=$("#ajOk"); if(ajb){ ajb.onclick=()=>agregarAjuste(m,id); $("#ajN").onkeydown=e=>{if(e.key==="Enter")agregarAjuste(m,id);}; }
   document.querySelectorAll("[data-ajdel]").forEach(b=>b.onclick=()=>quitarAjuste(m,id,b.dataset.ajdel));
   const mv=$("#lupaMovOk"); if(mv) mv.onclick=()=>{ const b=$("#lupaMov").value; if(b!==LINEAS[id].b) moverLinea(id,b,null); };
@@ -1167,6 +1314,111 @@ $("#dlgCmv").addEventListener("close",async()=>{
   cmvProp=null;
 });
 
+/* ---------- Pedidos de mejora ---------- */
+function contextoPantalla(){
+  if(vista==='ayuda') return "Ayuda";
+  const p=[nombreUnidad(unidad)];
+  const lupaAbierta=lupaRef&&!$("#lupa").hidden;
+  if(lupaAbierta) p.push(nombreMes(lupaRef.m)); else if(sel) p.push(nombreMes(sel));
+  if(lupaAbierta){ if(lupaRef.kind==="alertas") p.push("panel de alertas");
+    else if(lupaRef.kind==="l") p.push("lupa: "+LINEAS[lupaRef.id].n); else { const s=EST.find(z=>z.b===lupaRef.id||z.sub===lupaRef.id); p.push("lupa: "+(s?s.t:lupaRef.id)); } }
+  const d=[...document.querySelectorAll("dialog[open]")].find(x=>x.id!=="dlgPed"); if(d) p.push("ventana: "+(d.querySelector("h2")||{}).textContent);
+  return p.join(" · ");
+}
+const ESTADOS_PED={pendiente:"Pendiente","en curso":"En curso",resuelto:"Resuelto",descartado:"Descartado"};
+const abiertoPed=x=>x.estado!=="resuelto"&&x.estado!=="descartado";
+function numerar(l){ let mx=l.reduce((a,x)=>Math.max(a,x.n||0),0); l.slice().sort((a,b)=>String(a.en).localeCompare(String(b.en))).forEach(x=>{ if(!x.n) x.n=++mx; }); return l; }
+function actualizarPedCount(){ const n=PEDIDOS.filter(abiertoPed).length; ["#pedCount","#fabCount"].forEach(s=>{const c=$(s); if(c){ c.textContent=n; c.hidden=!n; }}); const b=$("#pedCopiar"); if(b) b.textContent=`Copiar pendientes (${n})`; }
+async function leerPedidosRemotos(){
+  if(store!==remoto) return null;
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/${TABLA_EERR}?id=eq.pedidos&select=valor`,{headers:supaHeaders()});
+  if(!r.ok) throw new Error("HTTP "+r.status); const rows=await r.json(); return (rows[0]&&rows[0].valor&&rows[0].valor.lista)||[];
+}
+async function guardarPedidos(mutar){
+  try{ const rem=await leerPedidosRemotos(); if(rem) PEDIDOS=rem; }catch(e){ console.warn(e); }
+  PEDIDOS=numerar(mutar(PEDIDOS.map(x=>({...x}))));
+  await store.guardar([{id:"pedidos",valor:{lista:PEDIDOS}}]);
+  actualizarPedCount(); pintarPedidos();
+}
+let pedFiltro="abiertos", pedRespAbierta=null;
+function pintarPedidos(){
+  const el=$("#pedList"); if(!el) return;
+  numerar(PEDIDOS);
+  const ab=PEDIDOS.filter(abiertoPed).length, ce=PEDIDOS.length-ab;
+  let h=`<div class="ped-fil"><button type="button" class="lnk${pedFiltro==="abiertos"?" on":""}" data-ped-fil="abiertos">Abiertos (${ab})</button><button type="button" class="lnk${pedFiltro==="cerrados"?" on":""}" data-ped-fil="cerrados">Cerrados (${ce})</button><button type="button" class="lnk${pedFiltro==="todos"?" on":""}" data-ped-fil="todos">Todos</button></div>`;
+  const ord={Alta:0,Normal:1,Baja:2};
+  const ls=PEDIDOS.filter(x=>pedFiltro==="todos"||(pedFiltro==="abiertos")===abiertoPed(x)).sort((a,b)=>ord[a.prio]-ord[b.prio]||b.n-a.n);
+  if(!PEDIDOS.length){ el.innerHTML=`<p class="sub" style="margin:0">Todavía no hay pedidos.</p>`; return; }
+  if(!ls.length) h+=`<p class="sub" style="margin:0">No hay pedidos en esta vista.</p>`;
+  h+=ls.map(x=>{ const est=x.estado||"pendiente";
+    return `<div class="ped-it e-${norm(est).replace(/\s/g,"-")}"><div class="ped-h"><span class="ped-n">#${x.n}</span><span class="ped-tag t-${norm(x.tipo)}">${esc(x.tipo)}</span><span class="ped-tag p-${norm(x.prio)}">${esc(x.prio)}</span><span class="ped-tag est">${esc(ESTADOS_PED[est]||est)}</span><span class="code">${esc(x.por||"")} · ${new Date(x.en).toLocaleString("es-AR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</span>
+      <span class="ped-btns"><button type="button" class="lnk" data-ped-resp="${x.id}">Responder</button><button type="button" class="lnk" data-ped-del="${x.id}" title="Borrar">✕</button></span></div>
+      <div class="ped-t">${esc(x.texto)}</div><div class="code">Pantalla: ${esc(x.ctx||"")}</div>
+      ${(x.respuestas||[]).length?`<div class="ped-resps">${x.respuestas.map(r=>`<div class="ped-r${r.por==="Claude"?" claude":""}"><span class="ped-rh"><b>${esc(r.por||"")}</b>${r.estado?` → <span class="ped-tag est">${esc(ESTADOS_PED[r.estado]||r.estado)}</span>`:""} <span class="code">${new Date(r.en).toLocaleString("es-AR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</span></span>${r.texto?`<div class="ped-t">${esc(r.texto)}</div>`:""}</div>`).join("")}</div>`:""}
+      ${pedRespAbierta===x.id?`<div class="ped-form"><textarea id="respTxt" rows="2" placeholder="Respuesta o acción tomada (ej.: se corrigió en la versión del 8/10)"></textarea><div class="ped-form-b"><label>Pasar a <select id="respEst">${Object.entries(ESTADOS_PED).map(([k,v])=>`<option value="${k}" ${k===(est==="pendiente"?"en curso":est)?"selected":""}>${v}</option>`).join("")}</select></label><button type="button" class="btn ghost" data-ped-cancel="1">Cancelar</button><button type="button" class="btn" data-ped-send="${x.id}">Guardar respuesta</button></div></div>`:""}
+    </div>`; }).join("");
+  el.innerHTML=h;
+  const rt=$("#respTxt"); if(rt) rt.focus();
+}
+let pedCtxActual="";
+function abrirPedidos(){
+  pedCtxActual=contextoPantalla(); $("#pedCtx").textContent="Pantalla: "+pedCtxActual;
+  $("#pedPegar").hidden=true;
+  actualizarPedCount(); pintarPedidos(); $("#dlgPed").showModal(); $("#pedTxt").focus();
+  leerPedidosRemotos().then(r=>{ if(r){ PEDIDOS=r; actualizarPedCount(); pintarPedidos(); } }).catch(()=>{});
+}
+$("#btnPedidos").onclick=abrirPedidos; $("#fabPedido").onclick=abrirPedidos;
+$("#pedCerrar").onclick=()=>$("#dlgPed").close();
+$("#pedGuardar").onclick=async()=>{
+  const txt=$("#pedTxt").value.trim(); if(!txt){ $("#pedTxt").focus(); return; }
+  const item={id:"p"+Date.now().toString(36),tipo:$("#pedTipo").value,prio:$("#pedPrio").value,texto:txt,ctx:pedCtxActual,por:usuario(),en:new Date().toISOString(),estado:"pendiente",respuestas:[]};
+  try{ await guardarPedidos(l=>[...l,item]); $("#pedTxt").value=""; $("#pedTipo").value="Mejora"; $("#pedPrio").value="Normal"; pedFiltro="abiertos"; pintarPedidos(); }
+  catch(e){ alert("No se pudo guardar el pedido: "+e.message); }
+};
+async function responderPedido(id,texto,estado,por){
+  await guardarPedidos(l=>l.map(x=>x.id!==id?x:{...x,estado:estado||x.estado,respuestas:[...(x.respuestas||[]),{texto,estado,por,en:new Date().toISOString()}]}));
+}
+$("#pedList").addEventListener("click",async e=>{
+  const f=e.target.closest("[data-ped-fil]"); if(f){ pedFiltro=f.dataset.pedFil; pintarPedidos(); return; }
+  const r=e.target.closest("[data-ped-resp]"); if(r){ pedRespAbierta=pedRespAbierta===r.dataset.pedResp?null:r.dataset.pedResp; pintarPedidos(); return; }
+  if(e.target.closest("[data-ped-cancel]")){ pedRespAbierta=null; pintarPedidos(); return; }
+  const s=e.target.closest("[data-ped-send]");
+  try{
+    if(s){ const txt=$("#respTxt").value.trim(), est=$("#respEst").value; s.disabled=true; await responderPedido(s.dataset.pedSend,txt,est,usuario()); pedRespAbierta=null; pintarPedidos(); }
+    const d=e.target.closest("[data-ped-del]"); if(d&&confirm("¿Borrar este pedido?")){ const id=d.dataset.pedDel; await guardarPedidos(l=>l.filter(x=>x.id!==id)); }
+  }catch(err){ alert("No se pudo actualizar: "+err.message); }
+});
+async function copiarTexto(txt){ try{ await navigator.clipboard.writeText(txt); return true; }catch(_){
+  const ta=document.createElement("textarea"); ta.value=txt; ta.style.position="fixed"; ta.style.opacity="0"; $("#dlgPed").appendChild(ta); ta.select(); let ok=false; try{ ok=document.execCommand("copy"); }catch(__){} ta.remove(); return ok; } }
+$("#pedCopiar").onclick=async()=>{
+  const p=PEDIDOS.filter(abiertoPed); if(!p.length) return;
+  const ord={Alta:0,Normal:1,Baja:2}; p.sort((a,b)=>ord[a.prio]-ord[b.prio]||a.n-b.n);
+  const txt=`Pedidos de mejora · Estado de resultados (${p.length} abiertos)\n\n`+p.map(x=>`#${x.n} [${x.tipo} · prioridad ${x.prio} · ${ESTADOS_PED[x.estado||"pendiente"]}] ${x.texto}\n   Pantalla: ${x.ctx||"-"} · ${x.por||""}, ${new Date(x.en).toLocaleString("es-AR")}`+(x.respuestas||[]).map(r=>`\n   ↳ ${r.por}${r.estado?" ("+ESTADOS_PED[r.estado]+")":""}: ${r.texto||""}`).join("")).join("\n\n")
+    +`\n\n---\nAl terminar, respondé con una línea por pedido en este formato para pegarla en el panel:\n#número | Resuelto / En curso / Pendiente / Descartado | qué se hizo`;
+  const ok=await copiarTexto(txt);
+  const b=$("#pedCopiar"); b.textContent=ok?"¡Copiado! Pegalo en el chat con Claude":"No se pudo copiar"; setTimeout(()=>actualizarPedCount(),2200);
+};
+// Pegar la respuesta de Claude: líneas "#n | Estado | texto"
+$("#pedPegarBtn").onclick=()=>{ const el=$("#pedPegar"); el.hidden=!el.hidden; if(!el.hidden) $("#pegTxt").focus(); };
+function parsearRespuestas(txt){
+  const out=[]; const reE=/^(pendiente|en curso|resuelto|resuelta|descartado|descartada)$/i;
+  txt.split(/\r?\n/).forEach(l=>{ const m=l.trim().replace(/^[-*•]\s*/,"").match(/^#\s*(\d+)\s*[|:\-–—]?\s*(.*)$/); if(!m) return;
+    let resto=m[2].split(/\s*\|\s*/); let est=null;
+    if(resto.length>1&&reE.test(resto[0].trim())){ est=resto.shift().trim().toLowerCase(); }
+    else { const mm=m[2].match(/^(pendiente|en curso|resuelto|resuelta|descartado|descartada)\b[\s:\-–—.]*/i); if(mm){ est=mm[1].toLowerCase(); resto=[m[2].slice(mm[0].length)]; } }
+    if(est) est=est.replace(/a$/,"o"); out.push({n:+m[1],estado:est,texto:resto.join(" | ").trim()}); });
+  return out;
+}
+$("#pegTxt").addEventListener("input",()=>{ const r=parsearRespuestas($("#pegTxt").value);
+  $("#pegPrev").innerHTML=r.length?r.map(x=>{const p=PEDIDOS.find(y=>y.n===x.n);return `<div>${p?"✓":"✕"} #${x.n} ${x.estado?"→ "+esc(ESTADOS_PED[x.estado]):""} ${p?"":"<span class='code'>(no existe)</span>"} <span class="code">${esc(x.texto.slice(0,90))}</span></div>`;}).join(""):`<span class="code">Pegá líneas con el formato #número | Estado | qué se hizo</span>`; });
+$("#pegOk").onclick=async()=>{
+  const r=parsearRespuestas($("#pegTxt").value).filter(x=>PEDIDOS.some(y=>y.n===x.n)); if(!r.length){ alert("No encontré líneas con el formato #número | Estado | texto que coincidan con pedidos existentes."); return; }
+  try{ const now=new Date().toISOString();
+    await guardarPedidos(l=>l.map(x=>{ const a=r.find(z=>z.n===x.n); return a?{...x,estado:a.estado||x.estado,respuestas:[...(x.respuestas||[]),{texto:a.texto,estado:a.estado,por:"Claude",en:now}]}:x; }));
+    $("#pegTxt").value=""; $("#pegPrev").innerHTML=""; $("#pedPegar").hidden=true; pedFiltro="todos"; pintarPedidos();
+  }catch(e){ alert("No se pudo guardar: "+e.message); }
+};
+
 /* ---------- Ayuda ---------- */
 function reglaDe(l){
   if(l.s==="odoo") return "Odoo, cuenta "+(l.c&&l.c.length?l.c.join(" + "):"(sin cuenta)")+"."+(l.nota?" "+l.nota:"");
@@ -1179,7 +1431,7 @@ function renderAyuda(){
   const filas=EST.filter(s=>s.l).map(s=>s.l.map(l=>`<tr><td>${esc(s.t)}</td><td>${esc(l.n)}</td><td>${esc(l.s==="odoo"?"Odoo":FUENTES[l.s].t)}</td><td>${esc(reglaDe(l))}</td></tr>`).join("")).join("");
   el.innerHTML=`
 <h2>Cómo funciona</h2>
-<nav class="toc" aria-label="Contenido"><a href="#a-mes">Cierre mensual</a><a href="#a-colores">Colores</a><a href="#a-fuentes">Fuentes de cada línea</a><a href="#a-fuentesx">Fuentes externas</a><a href="#a-socios">Socios</a><a href="#a-lupa">Lupa</a><a href="#a-mover">Mover líneas</a><a href="#a-cong">Congelar</a><a href="#a-unid">Unidades</a><a href="#a-exp">Exportar</a><a href="#a-faq">Preguntas frecuentes</a></nav>
+<nav class="toc" aria-label="Contenido"><a href="#a-mes">Cierre mensual</a><a href="#a-colores">Colores</a><a href="#a-fuentes">Fuentes de cada línea</a><a href="#a-fuentesx">Fuentes externas</a><a href="#a-socios">Socios</a><a href="#a-lupa">Lupa</a><a href="#a-alertas">Alertas</a><a href="#a-mover">Mover líneas</a><a href="#a-pedidos">Pedidos</a><a href="#a-cong">Congelar</a><a href="#a-unid">Unidades</a><a href="#a-exp">Exportar</a><a href="#a-faq">Preguntas frecuentes</a></nav>
 <p>El estado de resultados se arma combinando dos cosas: el <strong>export de Odoo</strong>, que trae todo lo contable, y las <strong>fuentes externas</strong> (líneas celestes), que reemplazan lo que en Odoo no está bien imputado o directamente no está: sueldos, CMV, bancos, intereses, etc. Todo se guarda en Supabase, así que lo que carga una persona lo ve todo el equipo.</p>
 
 <h2 id="a-mes">Cierre de un mes, paso a paso</h2>
@@ -1229,6 +1481,21 @@ ${Object.entries(FUENTES).map(([k,f])=>`<h3>${esc(f.t)}</h3><p class="muted">${e
 </ol>
 <p><strong>TC corporativas</strong> (en Retiro de socios) sale de la misma solapa TDC, filas con Empresa SPOTSLINE o SPL, con la misma conversión de dólares.</p><ol style="display:none">
 </ol>
+<h2 id="a-alertas">Alertas</h2>
+<p>Arriba de la tabla, una franja resume las alertas del mes abierto (o del que elijas). Cada línea se compara con los meses anteriores de la misma unidad:</p>
+<ul>
+<li><strong>En cero, pero siempre tiene valor</strong> (recuadro rojo ⚠): la línea tuvo valor en todos los meses anteriores (los últimos 2 o 3) y este mes da cero. Típico: luz, gas o alquiler que no se registró en Odoo.</li>
+<li><strong>Habitual sin cargar</strong> (también ⚠): lo mismo, pero la línea todavía está pendiente.</li>
+<li><strong>Variación fuerte</strong> (▲ subió o ▼ bajó el monto, con el %): la diferencia contra el mes anterior supera a la vez el % y el monto mínimos. Por defecto, 30% y $500.000; se cambian desde <em>Ver alertas</em> y valen para todo el equipo.</li>
+</ul>
+<p>Tocando la celda, la lupa muestra la evolución de los últimos meses. Si la diferencia está bien, <em>Marcar como revisado</em> (con una nota opcional) la saca de la cuenta; queda registrado quién lo revisó. Ojo: en un mes que recién empieza, casi todo va a aparecer como variación, porque todavía no está completo.</p>
+<h2 id="a-pedidos">Pedidos de mejora</h2>
+<p>El botón <em>Pedidos de mejora</em> (arriba a la derecha) sirve para anotar errores, mejoras o ideas mientras usás el panel. Cada pedido guarda automáticamente la pantalla donde estabas (unidad, mes, línea de la lupa o ventana abierta) y quién lo cargó. Se guardan en Supabase, así que los ve todo el equipo. Cada pedido tiene un número (#1, #2…) y un estado: Pendiente, En curso, Resuelto o Descartado.</p>
+<ul>
+<li><strong>Copiar pendientes</strong> copia los pedidos abiertos (con sus respuestas anteriores) para pegarlos en la conversación con Claude.</li>
+<li><strong>Responder</strong>, en cada pedido, agrega una respuesta o acción tomada y cambia el estado. Queda el historial con quién respondió y cuándo.</li>
+<li><strong>Pegar respuesta de Claude</strong>: Claude responde con una línea por pedido (<span class="code">#3 | Resuelto | qué se hizo</span>); la pegás y se aplica a cada pedido, con vista previa antes de confirmar.</li>
+</ul><p class="muted">Arriba de la lista se filtra entre abiertos, cerrados o todos.</p>
 <h2 id="a-mover">Mover líneas entre bloques</h2>
 <p>Arrastrá una línea desde el ⠿ que aparece a la izquierda de su nombre y soltala sobre otra línea (queda arriba de esa) o sobre el título de un bloque (queda al final). También se puede hacer desde la lupa, en <em>Ubicación</em>. El cambio se guarda en Supabase y lo ve todo el equipo. Ventas, CMV e Impuesto a las ganancias no se mueven.</p>
 <p>Si la línea tiene valores en meses congelados, avisa antes: los valores no cambian, pero sí los totales de los bloques y, si la línea cruza el EBITDA, los subtotales de esos meses.</p>
@@ -1353,6 +1620,7 @@ document.addEventListener("click",e=>{
   const mb=e.target.closest("[data-mes]"); if(mb){sel=sel===mb.dataset.mes?null:mb.dataset.mes;render();if(sel)$("#detalle").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"nearest"});return;}
   const ac=e.target.closest("[data-accion]"); if(ac){ (ac.dataset.accion==="congelar"?congelar:descongelar)(unidad,sel).catch(()=>{}); return; }
   const bl=e.target.closest("tr.bloque:not(.solo)"); if(bl){const b=bl.dataset.b;cerrados.has(b)?cerrados.delete(b):cerrados.add(b);render();return;}
+  const alb=e.target.closest("[data-alertas]"); if(alb){abrirAlertas(alb.dataset.alertas);return;}
   const go=e.target.closest("[data-go]"); if(go){ if(go.dataset.goU&&unidad==='cons'){ unidad=go.dataset.goU; render(); }const [m,k,id]=go.dataset.go.split("|"); abrirLupa(m,k,id); return;}
   if(e.target.closest("#lupaX")){cerrarLupa();return;}
   if(e.target.closest("#btnReset")){restablecerEstructura();return;}
