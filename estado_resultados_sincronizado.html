@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Estado de resultados · Spotsline y SPL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{
+  --paper:#0e0e0e; --surface:#181818; --surface2:#202020; --ink:#f1f1f1; --muted:#9b9b9b; --line:#2b2b2b;
+  --yellow:#f5c400; --yellow-ink:#121212; --yellow-soft:#2a230a;
+  --odoo:#8a8a8a; --celeste:#0f2c3b; --celeste-ink:#8fd0f0; --sync:#10301d; --sync-ink:#7fdca5;
+  --pend:#f5c400; --pend-bg:#2a2410; --neg:#ff6b5e; --pos:#4ade80; --neg-bg:#3a1513; --pos-bg:#0f2e1b;
+  --sub:#232323; --final:#f5c400; --final-ink:#121212; --frozen:#1b1e25; --frozen-ink:#c3c9d6;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--celeste-ink);outline-offset:2px}
+.wrap{max-width:1600px;margin:0 auto;padding:26px clamp(14px,3vw,36px) 60px}
+header.top{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+.brand h1{font-size:clamp(24px,3.2vw,38px);font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.05}
+.brand p{margin:6px 0 0;color:var(--muted);max-width:66ch}
+.unidades{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;overflow-x:auto}
+.unidades button{border:0;background:none;padding:10px 16px;cursor:pointer;color:var(--muted);font-weight:600;border-bottom:3px solid transparent;white-space:nowrap}
+.unidades button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.toolbar .g{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:7px 12px;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.btn.ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn.warn{background:var(--surface);color:var(--neg);border-color:var(--neg)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--muted);font-size:12.5px;margin:0 0 10px}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:14px;height:14px;border-radius:3px;display:inline-block;border:1px solid var(--line)}
+.sw.odoo{background:var(--surface);box-shadow:inset 2px 0 0 var(--odoo)}
+.sw.man{background:var(--celeste);border-color:transparent}
+.sw.sync{background:var(--sync);border-color:transparent}
+.sw.pend{background:repeating-linear-gradient(135deg,var(--pend-bg) 0 4px,var(--pend) 4px 5px)}
+.sw.frozen{background:var(--frozen)}
+.status{min-height:20px;font-size:13px;color:var(--muted);margin-bottom:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.status.err{color:var(--neg)}
+.conn{font-size:12px;padding:2px 9px;border-radius:99px;background:var(--sub);color:var(--muted)}
+.conn.ok{background:var(--sync);color:var(--sync-ink)}
+.conn.bad{background:var(--pend-bg);color:var(--ink)}
+.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table.eerr{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;font-variant-numeric:tabular-nums}
+.eerr th,.eerr td{padding:5px 12px;white-space:nowrap;border-bottom:1px solid var(--line)}
+.eerr thead th{position:sticky;top:0;background:var(--surface);z-index:2;text-align:right;vertical-align:bottom;padding-top:12px}
+.eerr thead th:first-child{text-align:left;z-index:3}
+th.mes button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+th.mes .m{font-weight:700;font-size:14px;text-transform:capitalize;display:flex;gap:5px;align-items:center}
+th.mes .e{font-size:11px;font-weight:500;color:var(--muted)}
+th.mes .e.abierto{color:var(--celeste-ink)}
+th.mes.sel{background:var(--sub)}
+.lock{width:11px;height:11px;flex:none}
+.eerr td:first-child,.eerr th:first-child{position:sticky;left:0;background:inherit;min-width:300px;max-width:340px;white-space:normal;z-index:1}
+.eerr tbody tr{background:var(--surface)}
+td.num{text-align:right;min-width:118px}
+tr.linea td:first-child{padding-left:28px}
+tr.linea td.lbl{display:flex;gap:8px;align-items:baseline;justify-content:space-between}
+.code{font-size:11px;color:var(--muted)}
+td.src-odoo{box-shadow:inset 2px 0 0 color-mix(in srgb,var(--odoo) 55%,transparent)}
+td.src-manual{background:var(--celeste);color:var(--celeste-ink)}
+td.src-sync{background:var(--sync);color:var(--sync-ink)}
+td.src-frozen{background:var(--frozen);color:var(--frozen-ink)}
+td.src-pend{background:repeating-linear-gradient(135deg,var(--pend-bg) 0 6px,transparent 6px 12px);color:var(--muted);font-size:12px}
+td.edit{cursor:pointer}
+td.edit:hover{outline:1px solid var(--celeste-ink);outline-offset:-2px}
+tr.bloque td{font-weight:600;background:var(--sub);cursor:pointer}
+tr.bloque td:first-child::before{content:"▾";display:inline-block;width:16px;color:var(--muted);transition:transform .15s}
+tr.bloque.cerrado td:first-child::before{transform:rotate(-90deg)}
+tr.sub td{font-weight:800;border-top:2px solid var(--ink);background:var(--surface)}
+tr.sub.final td{background:var(--final);color:var(--final-ink);font-size:15px}
+tr.sub td.neg{color:var(--neg)}
+tr.sub td.pos{color:var(--pos)}
+tr.sub.final td.neg,tr.sub.final td.pos{color:var(--final-ink)}
+.parcial{font-size:10px;vertical-align:super;color:var(--pend);margin-left:3px}
+.nota{display:inline-block;width:15px;height:15px;border-radius:50%;border:1px solid var(--muted);color:var(--muted);font-size:10px;text-align:center;line-height:13px;cursor:help;flex:none}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px;margin-top:28px}
+section.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+section.panel h2{font-size:17px;margin:0 0 4px;font-weight:800}
+p.sub{margin:0 0 14px;color:var(--muted);font-size:13px}
+.fuente{border-top:1px solid var(--line);padding:12px 0}
+.fuente:first-of-type{border-top:0}
+.fuente h3{font-size:14.5px;margin:0;display:flex;justify-content:space-between;gap:10px}
+.fuente .tag{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.fuente ul{margin:6px 0 0;padding-left:18px;color:var(--muted);font-size:13px}
+.pill{font-size:11.5px;padding:2px 8px;border-radius:99px;background:var(--pend-bg);color:var(--ink);white-space:nowrap}
+.pill.ok{background:var(--sync);color:var(--sync-ink)}
+.det table{width:100%;font-size:13px;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.det td,.det th{padding:4px 6px;border-bottom:1px solid var(--line)}
+.det th{text-align:left;color:var(--muted);font-weight:500}
+.det th.num,.det td.num{text-align:right;min-width:0}
+.det h4{margin:16px 0 4px;font-size:13.5px}
+.frozenbox{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 12px;border-radius:8px;background:var(--frozen);color:var(--frozen-ink);margin-bottom:6px;font-size:13px}
+.empty{padding:40px 24px;text-align:center;color:var(--muted)}
+.pop{position:fixed;z-index:20;background:var(--surface);border:1px solid var(--ink);border-radius:10px;padding:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);width:260px}
+.pop label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.pop input{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--paper);text-align:right;font-variant-numeric:tabular-nums}
+.pop .row{display:flex;gap:6px;margin-top:10px;justify-content:flex-end}
+.pop small{display:block;margin-top:6px;color:var(--muted);font-size:11.5px}
+dialog{border:1px solid var(--line);border-radius:12px;padding:0;background:var(--surface);color:var(--ink);width:min(720px,94vw);max-height:88vh}
+dialog::backdrop{background:rgba(10,16,18,.45)}
+dialog .dh{padding:16px 20px 6px}
+dialog .dh h2{margin:0;font-size:18px;font-weight:800}
+dialog .db{padding:6px 20px 12px;overflow:auto;max-height:62vh}
+dialog .df{padding:12px 20px 16px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line)}
+fieldset{border:0;padding:0;margin:0 0 14px}
+legend{font-weight:600;font-size:13.5px;margin-bottom:6px;padding:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:13px;user-select:none}
+.chip:has(input:checked){border-color:var(--ink);background:var(--sub)}
+.chip:has(input:disabled){opacity:.5;cursor:not-allowed}
+.chip input{margin:0}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+.quick button{border:0;background:none;color:var(--celeste-ink);cursor:pointer;padding:2px 4px;font-size:12.5px;text-decoration:underline}
+.cmp td.dif{font-weight:600}
+.ayuda{max-width:900px;line-height:1.6}
+.ayuda h2{font-size:22px;font-weight:800;margin:28px 0 8px}
+.ayuda h2:first-child{margin-top:4px}
+.ayuda h3{font-size:16px;margin:20px 0 6px}
+.ayuda p,.ayuda li{color:var(--ink)}
+.ayuda ol li,.ayuda ul li{margin:4px 0}
+.ayuda .muted{color:var(--muted)}
+.ayuda table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0 4px}
+.ayuda th,.ayuda td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.ayuda th{color:var(--muted);font-weight:600}
+.ayuda .tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 10px}
+.ayuda .toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin:0 0 6px}
+.ayuda .toc a{color:var(--celeste-ink)}
+.ayuda .ley{display:inline-flex;align-items:center;gap:6px;margin-right:14px}
+/* ===== Look corporativo amarillo y negro ===== */
+header.top{padding:14px 18px;margin:-26px calc(-1*clamp(14px,3vw,36px)) 18px;background:#141414;border-bottom:1px solid var(--line);align-items:center}
+.brand{display:flex;gap:14px;align-items:center}
+.logo{width:34px;height:34px;border-radius:8px;background:var(--yellow);flex:none}
+.brand h1{font-size:clamp(18px,2vw,22px);letter-spacing:-.01em}
+.h1sub{font-weight:600;color:var(--muted)}
+.brand p{margin:2px 0 0;font-size:12.5px}
+.btn{background:var(--yellow);border-color:var(--yellow);color:var(--yellow-ink)}
+.btn.ghost{background:var(--surface);color:var(--ink);border-color:#3a3a3a}
+.btn.ghost:hover{border-color:var(--yellow)}
+.seg{border-color:#3a3a3a}
+.seg button[aria-pressed="true"]{background:var(--yellow);color:var(--yellow-ink);font-weight:600}
+.unidades button[aria-pressed="true"]{color:var(--yellow);border-bottom-color:var(--yellow)}
+.conn.ok{background:var(--sync);color:var(--sync-ink)}
+.tablebox{border-color:#333;max-height:calc(100vh - 90px);overflow:auto;overscroll-behavior:contain}
+.eerr thead th{top:0}
+.eerr thead th:first-child{background:#141414;z-index:5;left:0}
+/* KPIs */
+.kpis{display:grid;grid-template-columns:minmax(260px,1.4fr) repeat(3,minmax(170px,1fr));gap:12px;margin:4px 0 16px}
+@media (max-width:900px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi .t{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpi .v{font-size:clamp(20px,2.2vw,28px);font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .s{font-size:12.5px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.kpi.hero{background:var(--yellow);border-color:var(--yellow);color:var(--yellow-ink)}
+.kpi.hero .t,.kpi.hero .s{color:#3b3200}
+.kpi.hero .v{font-size:clamp(28px,3.4vw,40px)}
+.kpi .v.neg{color:var(--neg)} .kpi .v.pos{color:var(--pos)}
+.kpi.hero .v.neg,.kpi.hero .v.pos{color:var(--yellow-ink)}
+.delta{font-size:12px;font-weight:700;padding:1px 7px;border-radius:99px}
+.delta.up{background:var(--pos-bg);color:var(--pos)} .delta.down{background:var(--neg-bg);color:var(--neg)}
+.kpi.hero .delta{background:rgba(0,0,0,.12);color:var(--yellow-ink)}
+.badge{font-size:11px;padding:1px 7px;border-radius:99px;background:var(--pend-bg);color:var(--yellow)}
+.kpi.hero .badge{background:rgba(0,0,0,.15);color:var(--yellow-ink)}
+/* Filas: jerarquía visual */
+.eerr thead th{background:#141414;border-bottom:2px solid var(--yellow)}
+th.mes.sel{background:var(--yellow-soft)}
+th.mes.sel .m{color:var(--yellow)}
+tr.bloque td{background:#262626;color:#fff;font-weight:700;border-top:1px solid #333;font-size:14px}
+tr.bloque td:first-child{box-shadow:inset 4px 0 0 var(--yellow)}
+tr.bloque td:first-child::before{color:var(--yellow)}
+tr.bloque:hover td{background:#2d2d2d}
+tr.linea td{background:#151515;color:#cfcfcf;font-size:13px;border-bottom-color:#222}
+tr.linea:nth-of-type(even) td{background:#191919}
+tr.linea td:first-child{padding-left:34px;box-shadow:inset 4px 0 0 #3a3a3a}
+tr.linea td.lbl>span:first-child::before{content:"";display:inline-block;width:8px;height:8px;border-left:1px solid #555;border-bottom:1px solid #555;margin:0 8px 3px -14px}
+tr.linea:hover td{background:#202020}
+tr.linea td.src-formula{color:#e6cf7a;font-style:italic}
+tr.linea td.src-formula::before{content:"ƒ ";font-size:10px;opacity:.7}
+tr.linea td.src-manual{background:var(--celeste)} tr.linea td.src-sync{background:var(--sync)} tr.linea td.src-frozen{background:var(--frozen)}
+tr.linea td.src-pend{background:repeating-linear-gradient(135deg,var(--pend-bg) 0 6px,#151515 6px 12px)}
+tr.sub td{background:var(--yellow-soft);color:var(--yellow);border-top:2px solid var(--yellow);font-size:14.5px;text-transform:uppercase;letter-spacing:.02em}
+tr.sub td.num{text-transform:none}
+tr.sub td.num.pos{color:var(--pos);background:linear-gradient(0deg,var(--pos-bg),var(--pos-bg))}
+tr.sub td.num.neg{color:var(--neg);background:linear-gradient(0deg,var(--neg-bg),var(--neg-bg))}
+tr.sub td.num.pos::before{content:"▲ ";font-size:10px}
+tr.sub td.num.neg::before{content:"▼ ";font-size:10px}
+tr.sub.final td{background:var(--yellow);color:var(--yellow-ink);font-size:16px;border-top:0;padding-top:9px;padding-bottom:9px}
+tr.sub.final td.num.pos{background:#16a34a;color:#fff}
+tr.sub.final td.num.neg{background:#dc2626;color:#fff}
+.det table,.det td,.det th{border-color:var(--line)}
+section.panel{border-color:#2f2f2f}
+section.panel h2{color:#fff}
+.pill{background:var(--pend-bg);color:var(--yellow)}
+dialog{border-color:#3a3a3a}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+.chip:has(input:checked){border-color:var(--yellow);background:var(--yellow-soft)}
+.pop{border-color:var(--yellow)}
+.frozenbox{border:1px solid #2c3240}
+.ayuda .toc a,.quick button{color:var(--yellow)}
+td[data-c]{cursor:zoom-in;position:relative}
+td[data-c]:hover::after,td[data-c]:focus-visible::after{content:"";position:absolute;left:6px;top:50%;width:13px;height:13px;margin-top:-6.5px;opacity:.85;background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='6.5' cy='6.5' r='4.5' fill='none' stroke='%23f5c400' stroke-width='2'/%3E%3Cpath d='M10 10l4.5 4.5' stroke='%23f5c400' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E")}
+td.lupa-on{outline:2px solid var(--yellow);outline-offset:-2px}
+tr.bloque.solo td:first-child::before{content:"";width:16px}
+tr.bloque.solo{cursor:default}
+tr.bloque.solo td.src-manual{background:var(--celeste);color:var(--celeste-ink)}
+tr.bloque.solo td.src-sync{background:var(--sync);color:var(--sync-ink)}
+tr.bloque.solo td.src-frozen{background:var(--frozen);color:#fff}
+tr.bloque.solo td.src-pend{background:repeating-linear-gradient(135deg,var(--pend-bg) 0 6px,#262626 6px 12px);color:var(--muted)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);background:#151515;border-left:2px solid var(--yellow);z-index:30;display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(0,0,0,.6);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.dwh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 10px;border-bottom:1px solid var(--line)}
+.dwh h2{margin:2px 0 0;font-size:18px;font-weight:800}
+.dwk{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--yellow);font-weight:700}
+.dwb{padding:12px 18px 30px;overflow:auto}
+.dwv{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;margin:2px 0 8px}
+.dwv.neg{color:var(--neg)}
+.regla{font-size:13px;background:var(--yellow-soft);border-left:3px solid var(--yellow);padding:8px 10px;border-radius:6px;margin:0 0 12px}
+.dws{border-top:1px solid var(--line);margin-top:14px;padding-top:10px}
+.dws h3{margin:0 0 6px;font-size:15px}
+.dws.edit input{width:100%;padding:8px 10px;border:1px solid #3a3a3a;border-radius:7px;background:var(--paper);text-align:right;font-variant-numeric:tabular-nums;margin-top:6px}
+.dws.edit .row{display:flex;justify-content:flex-end;margin-top:8px}
+.det tr.tot td{font-weight:700;border-top:1px solid #444}
+.usd{font-size:11px;color:var(--yellow);font-weight:600}
+.tdcbox h4{margin:12px 0 4px;font-size:13.5px;color:var(--yellow)}
+.grip{color:#666;cursor:grab;margin:0 6px 0 -22px;font-size:13px;user-select:none}
+tr.linea:hover .grip{color:var(--yellow)}
+tr.linea td.lbl{justify-content:flex-start}
+tr.linea td.lbl .nota{margin-left:auto}
+tr.arrastrando td{opacity:.4}
+tr.drop-antes td{box-shadow:inset 0 3px 0 var(--yellow)!important}
+tr.drop-dentro td{outline:2px dashed var(--yellow);outline-offset:-2px}
+.ajm{font-size:9.5px;font-weight:700;color:var(--yellow);margin-left:4px;vertical-align:super}
+.pend-mes{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+.pend-mes:first-of-type{border-top:0;margin-top:0}
+.pend-mes h3{font-size:15px;margin:0 0 4px;display:flex;justify-content:space-between;gap:8px}
+.fuente h4{margin:0;font-size:13.5px}
+.pend-list{list-style:none;padding:0!important;display:flex;flex-wrap:wrap;gap:6px;margin-top:6px!important}
+.lnk{border:1px solid #3a3a3a;background:var(--surface2);color:var(--ink);border-radius:6px;padding:3px 9px;font-size:12.5px;cursor:pointer}
+.lnk:hover{border-color:var(--yellow);color:var(--yellow)}
+.det tr.clk{cursor:pointer} .det tr.clk:hover td{background:#222}
+@media (max-width:640px){.eerr td:first-child,.eerr th:first-child{min-width:190px}.code{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand"><span class="logo" aria-hidden="true"></span><div>
+    <h1>Estado de Resultados <span class="h1sub">· SPL / Spotsline</span></h1>
+    <p id="desc">Lo contable sale del export de Odoo; las líneas celestes se cargan desde su propia fuente. Los meses congelados quedan fijos.</p>
+  </div></div>
+  <div class="g" style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn ghost" id="btnRecargar" title="Volver a leer la base">↻ Actualizar</button>
+  </div>
+</header>
+<nav class="unidades" aria-label="Unidad de negocio" id="unidades"></nav>
+<div id="vistaEERR">
+<div class="toolbar">
+  <div class="g">
+    <div class="seg" role="group" aria-label="Unidad de medida">
+      <button data-u="p" aria-pressed="true">Pesos</button><button data-u="m" aria-pressed="false">Millones</button><button data-u="pct" aria-pressed="false">% ventas</button>
+    </div>
+  </div>
+  <div class="g">
+    <label class="btn ghost" id="impLbl" tabindex="0" role="button">Importar export de Odoo<input type="file" id="imp" accept=".xlsx,.xls" hidden></label>
+    <button class="btn ghost" id="btnCheques">Traer del panel de cheques</button>
+    <label class="btn ghost" id="cmvLbl" tabindex="0" role="button">Importar CMV<input type="file" id="cmvFile" accept=".xlsx,.xls" hidden></label>
+    <label class="btn ghost" id="pagLbl" tabindex="0" role="button">Importar pagos a socios<input type="file" id="pagFile" accept=".xlsx,.xls" hidden></label>
+    <label class="btn ghost" id="cfLbl" tabindex="0" role="button">Importar Cash Flow<input type="file" id="cfFile" accept=".xlsx,.xls" hidden></label>
+    <button class="btn" id="btnExport">Exportar</button>
+  </div>
+</div>
+<section class="kpis" id="kpis" aria-label="Resumen del mes"></section>
+<div class="legend">
+  <span><i class="sw odoo"></i>Odoo</span>
+  <span><i class="sw man"></i>Carga manual</span>
+  <span><i class="sw sync"></i>Sincronizado (cheques o Cash Flow)</span>
+  <span><i class="sw" style="background:none;border:0;color:#e6cf7a;font-style:italic;width:auto;height:auto">ƒ</i>Fórmula</span>
+  <span><i class="sw pend"></i>Fuente pendiente</span>
+  <span><i class="sw frozen"></i>Mes congelado</span>
+</div>
+<div class="status" id="statusBox"><span class="conn" id="conn">Conectando…</span><span class="conn" id="chqAuto"></span><span id="status" role="status"></span></div>
+<div class="tablebox"><table class="eerr" id="tbl"><thead></thead><tbody></tbody></table></div>
+<div class="grid2">
+  <section class="panel" id="detalle"></section>
+  <section class="panel" id="fuentes"></section>
+</div>
+</div>
+<article id="vistaAyuda" class="ayuda" hidden></article>
+</div>
+<div class="pop" id="pop" hidden></div>
+<aside class="drawer" id="lupa" hidden aria-labelledby="lupaT"><div class="dwh"><div><span class="dwk" id="lupaK"></span><h2 id="lupaT"></h2></div><button class="btn ghost" id="lupaX" aria-label="Cerrar">✕</button></div><div class="dwb" id="lupaB"></div></aside>
+
+<dialog id="dlgImp" aria-labelledby="dlgImpT"><form method="dialog">
+  <div class="dh"><h2 id="dlgImpT">Importar export de Odoo</h2><p class="sub" id="impInfo"></p></div>
+  <div class="db">
+    <fieldset><legend>Unidad de negocio</legend><div class="chips" id="impUnidad"></div></fieldset>
+    <fieldset><legend>Meses a importar</legend><div class="chips" id="impMeses"></div><p class="sub" style="margin-top:8px">Los meses congelados no se pueden pisar. Descongelalos primero si hace falta.</p></fieldset>
+  </div>
+  <div class="df"><button class="btn ghost" value="cancel">Cancelar</button><button class="btn" value="ok" id="impOk">Importar</button></div>
+</form></dialog>
+
+<dialog id="dlgExp" aria-labelledby="dlgExpT"><form method="dialog">
+  <div class="dh"><h2 id="dlgExpT">Exportar estado de resultados</h2></div>
+  <div class="db">
+    <fieldset><legend>Unidad</legend><div class="chips" id="expUnidad"></div></fieldset>
+    <fieldset><legend>Períodos</legend>
+      <div class="quick"><button type="button" data-q="3">Últimos 3</button><button type="button" data-q="6">Últimos 6</button><button type="button" data-q="12">Últimos 12</button><button type="button" data-q="frozen">Solo congelados</button><button type="button" data-q="all">Todos</button><button type="button" data-q="none">Ninguno</button></div>
+      <div class="chips" id="expMeses"></div></fieldset>
+    <fieldset><legend>Formato</legend><div class="chips">
+      <label class="chip"><input type="radio" name="fmt" value="xlsx" checked>Excel (con fórmulas)</label>
+      <label class="chip"><input type="radio" name="fmt" value="pdf">PDF</label>
+      <label class="chip"><input type="radio" name="fmt" value="csv">CSV</label>
+    </div></fieldset>
+    <fieldset><legend>Opciones</legend><div class="chips">
+      <label class="chip"><input type="checkbox" id="expDet" checked>Incluir líneas de detalle</label>
+      <label class="chip"><input type="checkbox" id="expTot">Columna total del período</label>
+      <label class="chip"><input type="checkbox" id="expAsc">Meses de más viejo a más nuevo</label>
+    </div></fieldset>
+  </div>
+  <div class="df"><button class="btn ghost" value="cancel">Cancelar</button><button class="btn" value="ok">Descargar</button></div>
+</form></dialog>
+
+<dialog id="dlgChq" aria-labelledby="dlgChqT" style="width:min(980px,96vw)"><form method="dialog">
+  <div class="dh"><h2 id="dlgChqT">Traer del panel de cheques</h2><p class="sub" id="chqInfo"></p></div>
+  <div class="db" id="chqBody"></div>
+  <div class="df"><button class="btn ghost" value="cancel">Cancelar</button><button class="btn" value="ok" id="chqOk">Aplicar a los meses marcados</button></div>
+</form></dialog>
+
+<dialog id="dlgCmv" aria-labelledby="dlgCmvT" style="width:min(860px,96vw)"><form method="dialog">
+  <div class="dh"><h2 id="dlgCmvT">Importar CMV (Estadísticas de facturas)</h2><p class="sub" id="cmvInfo"></p></div>
+  <div class="db" id="cmvBody"></div>
+  <div class="df"><button class="btn ghost" value="cancel">Cancelar</button><button class="btn" value="ok">Aplicar a los meses marcados</button></div>
+</form></dialog>
+<dialog id="dlgPag" aria-labelledby="dlgPagT" style="width:min(900px,96vw)"><form method="dialog">
+  <div class="dh"><h2 id="dlgPagT">Importar pagos a socios (Odoo)</h2><p class="sub" id="pagInfo"></p></div>
+  <div class="db" id="pagBody"></div>
+  <div class="df"><button class="btn ghost" value="cancel">Cancelar</button><button class="btn" value="ok">Aplicar a los meses marcados</button></div>
+</form></dialog>
+<dialog id="dlgCf" aria-labelledby="dlgCfT" style="width:min(1100px,96vw)"><form method="dialog">
+  <div class="dh"><h2 id="dlgCfT">Importar del Cash Flow</h2><p class="sub" id="cfInfo"></p></div>
+  <div class="db" id="cfBody"></div>
+  <div class="df"><button class="btn ghost" value="cancel">Cancelar</button><button class="btn" value="ok" id="cfOk">Aplicar a los meses marcados</button></div>
+</form></dialog>
+
+<script>
+/* ===================== CONFIGURACIÓN ===================== */
+const SUPABASE_URL = 'https://ozbynorwhkmevjmftpmy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_sBhFezk4bg0OPbSGG59jwA_bt1I1kpp';
+const TABLA_EERR = 'eerr';
+const TABLA_CHEQUES = 'cheques', FILA_CHEQUES = 'resumen_v1';
+const UNIDADES = [
+  {id:'spotsline', n:'Spotsline', razon:'Spotsline S.R.L.'},
+  {id:'spl', n:'SPL Distribuidora', razon:'SPL Distribuidora S.R.L.'}
+];
+// Mapeo propuesto panel de cheques -> líneas del EERR (a validar)
+const MAPEO_CHEQUES = {
+  venta_valores:{ops:true, n:'Costo de venta de cheques (interés + IVA + percep. + sellos + comisión)'},
+  descubierto:{cats:['Interés por descubierto']},
+  imp_cheque:{cats:['Impuesto Ley 25413']},
+  iibb:{cats:['IIBB / Percepciones']},
+  com_banc:{cats:['Comisiones','Sellos']}
+};
+const CATS_SIN_ASIGNAR = ['IVA'];
+/* ========================================================= */
+
+const EST_BASE = [{"b":"ventas","t":"Ventas netas","l":[{"id":"ventas","n":"Ventas netas de bienes y servicios","s":"odoo","c":["4.1.1.01.010"]}]},{"b":"cmv","t":"CMV","l":[{"id":"cmv","n":"CMV","s":"costo","r":["5.1.1.01.030"],"rg":"Export de Odoo \"Estadísticas de facturas\": suma de la columna Valor del inventario de todas las líneas del mes (facturas, notas de crédito y débito, y comprobantes internos 0001/…). Reemplaza a Compra de mercadería de Odoo."}]},{"sub":"cvv","t":"Costo de venta variable","f":["ventas","cmv"]},{"sub":"bruta","t":"Ganancia (pérdida) bruta","f":["ventas","cmv"]},{"b":"prod","t":"Gastos de producción","l":[{"id":"sueldos_prod","n":"Sueldos y SAC Producción","s":"sueldos","r":["5.1.2.01.010"]},{"id":"sac_prod","n":"SAC + Cargas Sociales","s":"formula","fx":{"base":"sueldos_prod","div":[2,6]},"rg":"Fórmula: Sueldos y SAC Producción ÷ 2 ÷ 6."},{"id":"gv_prod","n":"Gastos Varios Producción","s":"odoo","c":["5.1.2.01.030"]},{"id":"gas_prod","n":"Servicio de Gas Producción","s":"odoo","c":["5.1.2.01.070"],"nota":"En ago 2026 se tomó el valor que Odoo trae en sept."},{"id":"mant_prod","n":"Mantenimiento y Reparaciones Producción","s":"odoo","c":["5.1.2.01.090"]}]},{"b":"com","t":"Gastos de comercialización","l":[{"id":"sueldos_com","n":"Sueldos y SAC Comercial","s":"sueldos","r":["5.2.1.01.010"]},{"id":"sac_com","n":"SAC + Cargas Sociales","s":"formula","fx":{"base":"sueldos_com","div":[2,6]},"rg":"Fórmula: Sueldos y SAC Comercial ÷ 2 ÷ 6."},{"id":"movilidad","n":"Movilidad y viáticos","s":"odoo","c":["5.2.1.01.050"]},{"id":"publicidad","n":"Publicidad","s":"odoo","c":["5.2.1.01.060"]},{"id":"comisiones","n":"Comisiones Pagadas","s":"odoo","c":["5.2.1.01.070"]},{"id":"hon_com","n":"Honorarios Comercial","s":"odoo","c":["5.2.1.01.110"]},{"id":"seg_com","n":"Seguros Comercial","s":"seguros","r":["5.2.1.01.130"],"nota":"Socios + vendedores"},{"id":"seg_flota","n":"Seguros Comercial Real Flota","s":"seguros","nota":"Flota spots"},{"id":"flete","n":"Flete/Expresos","s":"odoo","c":["5.2.1.01.140"]},{"id":"comex","n":"Gastos comex","s":"odoo","c":["5.2.1.01.150"]},{"id":"gcom","n":"Gastos comerciales","s":"odoo","c":["5.2.1.02.031"]}]},{"b":"adm","t":"Gastos de administración","l":[{"id":"sueldos_adm","n":"Sueldos y SAC Administrativos","s":"sueldos","r":["5.3.1.01.010"]},{"id":"sac_adm","n":"SAC + Cargas Sociales","s":"formula","fx":{"base":"sueldos_adm","div":[2,6]},"rg":"Fórmula: Sueldos y SAC Administrativos ÷ 2 ÷ 6."},{"id":"gv_adm","n":"Gastos varios Administrativos","s":"odoo","c":["5.3.1.01.030"]},{"id":"alquileres","n":"Alquileres Administrativos","s":"odoo","c":["5.3.1.01.040"],"nota":"No vino en el export de Odoo de ago-oct 2026; en el Excel figura -800.000 fijo."},{"id":"luz","n":"Servicio Eléctrico Administrativos (Luz)","s":"odoo","c":["5.3.1.01.050","5.1.2.01.050"],"nota":"Suma también Servicio Eléctrico Producción (5.1.2.01.050), que se reclasifica acá."},{"id":"sistema","n":"Sistema y Software","s":"odoo","c":["5.3.1.01.090"]},{"id":"hon_adm","n":"Honorarios Administración","s":"odoo","c":["5.3.1.01.110"]},{"id":"libreria","n":"Artículos de librería","s":"odoo","c":["5.3.1.01.120"]},{"id":"seg_adm","n":"Seguros Administración","s":"odoo","c":["5.3.1.01.130"]},{"id":"sellados","n":"Sellados y Certificaciones","s":"odoo","c":["5.3.1.01.140"]}]},{"b":"otros","t":"Otros gastos","l":[{"id":"gv_otros","n":"Gastos Varios","s":"odoo","c":["5.01.01.022"]},{"id":"descuentos","n":"Descuentos Otorgados","s":"odoo","c":["5.01.01.024"]},{"id":"hon_prod","n":"Honorarios Producción","s":"odoo","c":["5.1.2.01.110","5.1.2.01.100"],"nota":"Incluye Higiene y Seguridad (5.1.2.01.100, Ecopure)."},{"id":"mant_limp","n":"Mantenimiento y limpieza","s":"odoo","c":["5.1.2.01.120"]},{"id":"seg_prod","n":"Seguros Producción","s":"odoo","c":["5.1.2.01.130"]},{"id":"obras_soc","n":"Obras Sociales","s":"odoo","c":["5.1.2.01.140"],"nota":"Sale de Odoo; se le pueden sumar ajustes manuales desde la lupa."},{"id":"iibb","n":"IIBB (Percepciones provinciales)","s":"bancos","r":["5.4.2.01.190"]},{"id":"imp_cheque","n":"Impuesto a los débitos y créditos bancarios","s":"bancos","r":["5.4.3.01.010"]},{"id":"com_banc","n":"Comisiones Bancarias + Imp. Sellos","s":"bancos","r":["5.6.1.01.060"],"nota":"Odoo trae todo junto como Gastos Bancarios."},{"id":"cargas","n":"Cargas Sociales","s":"sueldos"},{"id":"asimra","n":"Asimra","s":"sueldos"},{"id":"uom","n":"UOM","s":"sueldos"}]},{"sub":"ebitda","t":"EBITDA","f":["bruta","prod","com","adm","otros"]},{"b":"fin","t":"Resultados financieros y por tenencia","l":[{"id":"descubierto","n":"Intereses por descubierto","s":"bancos","r":["5.6.1.01.030"]},{"id":"venta_valores","n":"Intereses por venta de valores","s":"bancos","r":["5.6.1.01.040"]},{"id":"prestamos","n":"Intereses préstamos bancarios","s":"cashflow","rg":"Solapa Créditos Bancarios: Int. Financiero + Int. Resarcitorio, por Fecha Vto. Excluye filas con Estado Caduco.","r":["5.6.1.01.020"]},{"id":"afip_planes","n":"Intereses AFIP Planes","s":"cashflow","rg":"Solapa Planes ARCA: Interés Financiero, por Fecha Vencimiento. Excluye filas con Estado Caduco.","r":["5.6.1.01.050"]},{"id":"afip_sct","n":"Intereses AFIP Sist. Ctas. Tributarias","s":"cashflow","rg":"Solapa Deudas ARCA: IntResarcitorio + IntPunitorio, por Vencimiento. Excluye filas con Estado Caduco."},{"id":"arba","n":"Intereses moratoria ARBA","s":"cashflow","rg":"Solapa Planes de Pago, Tipo RENTAS: Int. Financiero + Int. Resarcitorio, por Fecha Vto. Excluye filas con Estado Caduco."},{"id":"uom_mor","n":"Intereses moratoria UOM","s":"cashflow","rg":"Solapa Planes de Pago, Tipo UOM: Int. Financiero + Int. Resarcitorio, por Fecha Vto. Excluye filas con Estado Caduco."},{"id":"asimra_mor","n":"Intereses moratoria ASIMRA / OSSIMRA","s":"cashflow","rg":"Solapa Planes de Pago, Tipo ASIMRA u OSSIMRA: Int. Financiero + Int. Resarcitorio, por Fecha Vto. Excluye filas con Estado Caduco."},{"id":"andina_mor","n":"Intereses moratoria ANDINA","s":"cashflow","rg":"Solapa Planes de Pago, Tipo ANDINA: Int. Financiero + Int. Resarcitorio, por Fecha Vto. Excluye filas con Estado Caduco."},{"id":"sh_mor","n":"Intereses Seguridad e Higiene","s":"cashflow","cero":true,"rg":"Sin fuente por ahora: arranca en 0 y se puede editar a mano."},{"id":"dif_cambio","n":"Diferencias de cambio","s":"odoo","c":["4.2.1.01.020"],"nota":"Línea nueva: aparece en Odoo desde sept 2026."}]},{"b":"indem","t":"Indemnizaciones","l":[{"id":"despidos","n":"Despidos","s":"cashflow","r":["5.7.1.01.010"],"rg":"Cash Flow, solapa Desvinculaciones: columna Cuota, por Fecha Vto."},{"id":"acuerdos","n":"Acuerdos","s":"cashflow","r":["5.7.1.01.020"],"rg":"Cash Flow, solapa Planes de Pago, Tipo SUELDOS: columna Cuota, por Fecha Vto."}]},{"b":"otring","t":"Otros ingresos y egresos","l":[{"id":"redondeo","n":"Ajuste por redondeo","s":"odoo","c":["4.2.1.01.030"],"nota":"Ojo: en ago 2026 Odoo trajo +54,3M y se restaron 53.977.500 a mano."}]},{"sub":"antes","t":"Resultado antes del impuesto a las ganancias","f":["ebitda","fin","indem","otring"]},{"b":"imp","t":"Impuesto a las ganancias","l":[{"id":"imp_gan","n":"Impuesto a las ganancias","s":"odoo","c":[]}]},{"b":"ret","t":"Retiro de socios","l":[{"id":"ret_eduardo","n":"Eduardo Porcel","s":"socios","rg":"Pagos a socios de Odoo (por fecha de la orden de pago) + tarjetas de la solapa TDC del Cash Flow con Empresa SOCIOS (por Fecha Vto.). En Odoo figura como \".\"; en TDC, EDUARDO o LALO."},{"id":"ret_facundo","n":"Facundo Porcel","s":"socios","rg":"Pagos a socios de Odoo (por fecha de la orden de pago) + tarjetas de la solapa TDC del Cash Flow con Empresa SOCIOS (por Fecha Vto.). En Odoo figura como \"..\"; en TDC, FACU o FACUNDO."},{"id":"ret_juanma","n":"Juan Manuel Porcel","s":"socios","rg":"Pagos a socios de Odoo (por fecha de la orden de pago) + tarjetas de la solapa TDC del Cash Flow con Empresa SOCIOS (por Fecha Vto.). En Odoo figura como Juan Manuel Porcel; en TDC, JM o J."},{"id":"tc_corp","n":"TC corporativas","s":"cashflow","rg":"Cash Flow, solapa TDC, Empresa SPOTSLINE o SPL: columna Importe, por Fecha Vto. Los consumos en dólares se convierten al tipo de cambio cargado al importar."}]},{"sub":"final","t":"Resultado final del ejercicio","f":["antes","imp","ret"]}];
+let EST = JSON.parse(JSON.stringify(EST_BASE));
+let CONFIG = {ubicacion:{}};
+const SEED = {"spotsline:2026-08":{"unidad":"spotsline","mes":"2026-08","estado":"congelado","valores":{"ventas":239968767.7,"cmv":-82195581.58,"sueldos_prod":-57222711.0,"sac_prod":-4768559.25,"gv_prod":-1299060.39,"gas_prod":-1549221.76,"mant_prod":-4814997.3,"sueldos_com":-5797813.16,"sac_com":-483151.1,"movilidad":-1361947.21,"publicidad":-638800.0,"comisiones":-16839559.43,"hon_com":-2000000.0,"seg_com":-1054041.35,"seg_flota":-1039887.64,"flete":-7075432.28,"comex":0.0,"gcom":-1823881.71,"sueldos_adm":-9583763.0,"sac_adm":-798646.92,"gv_adm":-737290.85,"alquileres":-800000.0,"luz":-4861090.71,"sistema":-1516238.2,"hon_adm":-28962921.0,"libreria":0.0,"seg_adm":-545878.3,"sellados":-141261.41,"gv_otros":-2239420.74,"descuentos":-4613833.55,"hon_prod":-351000.0,"mant_limp":-360722.07,"seg_prod":0.0,"obras_soc":-2768680.93,"iibb":-263893.43,"imp_cheque":1140472.1,"com_banc":-1120664.13,"cargas":-17652565.54,"asimra":-380305.12,"uom":-1742779.84,"descubierto":-2454149.27,"venta_valores":-9427455.51,"prestamos":-19886835.0,"afip_planes":-10729310.86,"afip_sct":-54374.77,"arba":-1041086.0,"uom_mor":0.0,"sh_mor":0.0,"despidos":-28695250.0,"acuerdos":-2500000.0,"redondeo":329042.54,"imp_gan":0.0,"ret_eduardo":-2708762.29,"ret_facundo":-2598919.97,"ret_juanma":-1500000.0,"dif_cambio":0},"manual":{},"congeladoPor":"Excel histórico","congeladoEn":"2026-10-01T18:00:00Z","odoo":{"4.1.1.01.010":{"n":"Venta de mercadería","v":239762853.74},"5.1.1.01.030":{"n":"Compra de mercadería","v":-65775502.08},"5.1.2.01.030":{"n":"Gastos Varios Producción","v":-1299060.39},"5.1.2.01.050":{"n":"Servicio Eléctrico Producción","v":-4861090.71},"5.1.2.01.070":{"n":"Servicio de Gas Producción","v":0.0},"5.1.2.01.090":{"n":"Mantenimiento y Reparaciones Producción","v":-4814997.3},"5.2.1.01.050":{"n":"Movilidad y viáticos","v":-1361947.21},"5.2.1.01.060":{"n":"Publicidad","v":-638800.0},"5.2.1.01.070":{"n":"Comisiones Pagadas","v":-16839559.43},"5.2.1.01.110":{"n":"Honorarios Comercial","v":-2000000.0},"5.2.1.01.140":{"n":"Flete/Expresos","v":-7075432.28},"5.2.1.02.031":{"n":"Gastos comerciales","v":-1823881.71},"5.3.1.01.030":{"n":"Gastos varios Administrativos","v":-737290.85},"5.3.1.01.090":{"n":"Sistema y Software","v":-1516238.2},"5.3.1.01.110":{"n":"Honorarios Administración","v":-28962921.0},"5.3.1.01.120":{"n":"Artículos de librería","v":0.0},"5.3.1.01.130":{"n":"Seguros Administración","v":-545878.3},"5.3.1.01.140":{"n":"Sellados y Certificaciones","v":-141261.41},"5.01.01.022":{"n":"GASTOS VARIOS","v":-2239420.74},"5.01.01.024":{"n":"DESCUENTO OTORGADO","v":-4613833.55},"5.1.2.01.100":{"n":"Higiene y Seguridad","v":-351000.0},"5.1.2.01.120":{"n":"Mantenimiento y limpieza","v":-360722.07},"5.1.2.01.140":{"n":"Obras Sociales","v":-1503680.93},"5.6.1.01.060":{"n":"Gastos Bancarios","v":-13591061.14},"4.2.1.01.020":{"n":"Diferencias de cambio","v":0.0},"5.6.1.01.020":{"n":"Intereses por préstamos","v":-655403.27},"5.6.1.01.050":{"n":"Intereses fiscales","v":-9478210.39},"4.2.1.01.030":{"n":"Ajuste por redondeo","v":54317515.66}},"odooImportado":"2026-10-01T18:00:00Z"},"spotsline:2026-07":{"unidad":"spotsline","mes":"2026-07","estado":"congelado","valores":{"ventas":272535153.85,"cmv":-93217940.35,"sueldos_prod":-54140565.0,"sac_prod":-4511713.75,"gv_prod":-513427.24,"gas_prod":-1442709.76,"mant_prod":-1301255.76,"sueldos_com":-7215879.0,"sac_com":-601323.25,"movilidad":-1261975.66,"publicidad":0.0,"comisiones":-13124503.05,"hon_com":-2000000.0,"seg_com":-1054041.35,"seg_flota":-1039887.64,"flete":-6176230.21,"comex":0.0,"gcom":-3150386.32,"sueldos_adm":-9165307.0,"sac_adm":-763775.58,"gv_adm":-197151.19,"alquileres":-800000.0,"luz":-4860703.51,"sistema":-1928566.0,"hon_adm":-7312779.91,"libreria":-275909.63,"seg_adm":-221320.0,"sellados":-308467.21,"gv_otros":-12041347.81,"descuentos":-4725093.22,"hon_prod":0.0,"mant_limp":-849801.46,"seg_prod":0.0,"obras_soc":-2571610.95,"iibb":-793.99,"imp_cheque":-1041742.86,"com_banc":-833970.33,"cargas":-18469629.08,"asimra":-352850.92,"uom":-1722633.14,"descubierto":-833176.34,"venta_valores":-5718923.31,"prestamos":-15600455.0,"afip_planes":-10270730.85,"afip_sct":-90135.16,"arba":-1041086.0,"uom_mor":0.0,"sh_mor":0.0,"despidos":-26145250.0,"acuerdos":-2500000.0,"redondeo":32112.82,"imp_gan":0.0,"ret_eduardo":-4213875.57,"ret_facundo":-4861831.76,"ret_juanma":-1500000.0,"dif_cambio":0},"manual":{},"congeladoPor":"Excel histórico","congeladoEn":"2026-10-01T18:00:00Z"},"spotsline:2026-06":{"unidad":"spotsline","mes":"2026-06","estado":"congelado","valores":{"ventas":252990306.07,"cmv":-79269634.84,"sueldos_prod":-58241522.0,"sac_prod":-6676004.0,"gv_prod":-173389.17,"gas_prod":-1775903.34,"mant_prod":-1239620.69,"sueldos_com":-8338828.46,"sac_com":-442996.0,"movilidad":-959003.99,"publicidad":0.0,"comisiones":-12755613.78,"hon_com":-2000000.0,"seg_com":-1184983.0,"seg_flota":-1039887.64,"flete":-6078931.0,"comex":0.0,"gcom":-2173296.92,"sueldos_adm":-5837509.0,"sac_adm":-549065.0,"gv_adm":-665064.0,"alquileres":-800000.0,"luz":-6460559.76,"sistema":-644502.0,"hon_adm":-10344470.0,"libreria":-12697.08,"seg_adm":-174070.0,"sellados":-87053.68,"gv_otros":-1066155.3,"descuentos":-4066146.68,"hon_prod":-1061955.69,"mant_limp":-567546.75,"seg_prod":0.0,"obras_soc":-3478556.0,"iibb":0.0,"imp_cheque":-3814532.0,"com_banc":-4043656.0,"cargas":-32760291.63,"asimra":-599900.15,"uom":-2446598.08,"descubierto":0.0,"venta_valores":-9177283.0,"prestamos":-15569748.0,"afip_planes":-8739619.0,"afip_sct":-36809262.93,"arba":-1041086.0,"uom_mor":0.0,"sh_mor":0.0,"despidos":-20619301.7,"acuerdos":-5187500.0,"redondeo":560149.21,"imp_gan":0.0,"ret_eduardo":-3969781.88,"ret_facundo":-4350761.61,"ret_juanma":-3878114.0,"dif_cambio":0},"manual":{},"congeladoPor":"Excel histórico","congeladoEn":"2026-10-01T18:00:00Z"},"spotsline:2026-05":{"unidad":"spotsline","mes":"2026-05","estado":"congelado","valores":{"ventas":249601297.65,"cmv":-77041485.99,"sueldos_prod":-72151794.0,"sac_prod":-6676004.0,"gv_prod":-1173149.59,"gas_prod":-1353359.87,"mant_prod":-134876.14,"sueldos_com":-4889748.0,"sac_com":-442996.0,"movilidad":-846644.18,"publicidad":-826000.0,"comisiones":-15830959.91,"hon_com":-2500000.0,"seg_com":-1333552.0,"seg_flota":-1062685.0,"flete":-6094081.38,"comex":0.0,"gcom":-2794089.2,"sueldos_adm":-10488053.72,"sac_adm":-549065.0,"gv_adm":-171800.0,"alquileres":-800000.0,"luz":-4794188.93,"sistema":-1278299.47,"hon_adm":-9916364.62,"libreria":-207429.6,"seg_adm":0.0,"sellados":-45570.0,"gv_otros":-3696713.33,"descuentos":-4228390.06,"hon_prod":-1185048.96,"mant_limp":-21194.21,"seg_prod":-5647.1,"obras_soc":-3371669.0,"iibb":0.0,"imp_cheque":-3814532.0,"com_banc":-4043656.0,"cargas":-41681396.77,"asimra":-537440.64,"uom":-2273596.23,"descubierto":0.0,"venta_valores":-9177283.0,"prestamos":-9868648.0,"afip_planes":-8739619.0,"afip_sct":0.0,"arba":-1041086.0,"uom_mor":0.0,"sh_mor":0.0,"despidos":0.0,"acuerdos":-5187500.0,"redondeo":10855.95,"imp_gan":0.0,"ret_eduardo":-7562924.85,"ret_facundo":-3874062.03,"ret_juanma":-11634489.59,"dif_cambio":0},"manual":{},"congeladoPor":"Excel histórico","congeladoEn":"2026-10-01T18:00:00Z"},"spotsline:2026-04":{"unidad":"spotsline","mes":"2026-04","estado":"congelado","valores":{"ventas":269813705.2,"cmv":-72944162.51,"sueldos_prod":-84956305.0,"sac_prod":-6676004.0,"gv_prod":-2019775.38,"gas_prod":-1584697.42,"mant_prod":-13223.14,"sueldos_com":-4101848.0,"sac_com":-442996.0,"movilidad":-794863.39,"publicidad":-33338.28,"comisiones":-11084960.67,"hon_com":-3490000.0,"seg_com":-1333552.0,"seg_flota":-1062685.0,"flete":-6414000.0,"comex":-239650.0,"gcom":-2321301.73,"sueldos_adm":-11539307.0,"sac_adm":-549065.0,"gv_adm":-4035662.11,"alquileres":-800000.0,"luz":-5397993.65,"sistema":-254800.01,"hon_adm":-8272753.0,"libreria":-152000.0,"seg_adm":0.0,"sellados":-117659.16,"gv_otros":-3743387.9,"descuentos":-5235525.97,"hon_prod":-1213966.81,"mant_limp":-28925.65,"seg_prod":0.0,"obras_soc":-3874964.76,"iibb":0.0,"imp_cheque":-3814532.0,"com_banc":-11267191.91,"cargas":-43998509.28,"asimra":-550699.88,"uom":-2309671.78,"descubierto":0.0,"venta_valores":-9177283.0,"prestamos":-18967913.72,"afip_planes":-7825795.61,"afip_sct":0.0,"arba":-1041086.0,"uom_mor":0.0,"sh_mor":0.0,"despidos":0.0,"acuerdos":-5187500.0,"redondeo":-1701699.55,"imp_gan":0.0,"ret_eduardo":-5699291.16,"ret_facundo":-3367274.06,"ret_juanma":-3876794.18,"dif_cambio":0},"manual":{},"congeladoPor":"Excel histórico","congeladoEn":"2026-10-01T18:00:00Z"},"spotsline:2026-03":{"unidad":"spotsline","mes":"2026-03","estado":"congelado","valores":{"ventas":293492908.72,"cmv":-73696298.22,"sueldos_prod":-75074478.27,"sac_prod":-6676004.0,"gv_prod":-2165052.42,"gas_prod":-1514048.55,"mant_prod":-260000.0,"sueldos_com":-5523598.0,"sac_com":-442996.0,"movilidad":-1299871.33,"publicidad":-1367986.25,"comisiones":-8870448.06,"hon_com":-3490000.0,"seg_com":-1333552.0,"seg_flota":-1062685.0,"flete":-3755000.0,"comex":-3013395.06,"gcom":-990000.0,"sueldos_adm":-8599629.69,"sac_adm":-549065.0,"gv_adm":-1909243.25,"alquileres":-800000.0,"luz":-5878813.44,"sistema":-180000.0,"hon_adm":-9633704.21,"libreria":-209483.35,"seg_adm":0.0,"sellados":-30149.74,"gv_otros":-3670724.27,"descuentos":-4206737.18,"hon_prod":-601242.0,"mant_limp":-120000.0,"seg_prod":-4665.28,"obras_soc":-3292493.12,"iibb":0.0,"imp_cheque":-2619714.11,"com_banc":-2503749.8,"cargas":-41681396.77,"asimra":-537440.64,"uom":-2273596.68,"descubierto":0.0,"venta_valores":-10162472.28,"prestamos":-20009780.87,"afip_planes":-15018434.25,"afip_sct":0.0,"arba":-1041086.0,"uom_mor":0.0,"sh_mor":0.0,"despidos":0.0,"acuerdos":-2687500.0,"redondeo":-1701699.55,"imp_gan":0.0,"ret_eduardo":-2908000.0,"ret_facundo":-7914150.0,"ret_juanma":-2019708.0,"dif_cambio":0},"manual":{},"congeladoPor":"Excel histórico","congeladoEn":"2026-10-01T18:00:00Z"},"spotsline:2026-02":{"unidad":"spotsline","mes":"2026-02","estado":"congelado","valores":{"ventas":239286033.79,"cmv":-58578833.53,"sueldos_prod":-66778324.0,"sac_prod":-6676004.0,"gv_prod":-2462521.64,"gas_prod":-1665265.83,"mant_prod":-790970.0,"sueldos_com":-6704128.0,"sac_com":-442996.0,"movilidad":-892415.04,"publicidad":-942254.73,"comisiones":-11252824.24,"hon_com":-3210000.0,"seg_com":-1333552.0,"seg_flota":-1062685.0,"flete":-5960000.0,"comex":-336800.0,"gcom":-1716510.41,"sueldos_adm":-8330567.0,"sac_adm":-549065.0,"gv_adm":-917610.0,"alquileres":-800000.0,"luz":-5398486.39,"sistema":-307800.0,"hon_adm":-4921648.36,"libreria":0.0,"seg_adm":0.0,"sellados":0.0,"gv_otros":-2421466.76,"descuentos":-4449391.01,"hon_prod":-570503.0,"mant_limp":-20600.0,"seg_prod":0.0,"obras_soc":-3212053.06,"iibb":0.0,"imp_cheque":-3582948.25,"com_banc":-16607.7,"cargas":-46168381.4,"asimra":-578616.09,"uom":-2363106.21,"descubierto":0.0,"venta_valores":-6406019.9,"prestamos":-15502375.03,"afip_planes":-14892318.64,"afip_sct":0.0,"arba":-1041086.0,"uom_mor":0.0,"sh_mor":0.0,"despidos":0.0,"acuerdos":0.0,"redondeo":0.0,"imp_gan":0.0,"ret_eduardo":-5226000.0,"ret_facundo":-8278676.0,"ret_juanma":-5492300.0,"dif_cambio":0},"manual":{},"congeladoPor":"Excel histórico","congeladoEn":"2026-10-01T18:00:00Z"},"spotsline:2026-01":{"unidad":"spotsline","mes":"2026-01","estado":"congelado","valores":{"ventas":264353340.72,"cmv":-53538979.18,"sueldos_prod":-66387152.0,"sac_prod":-6676004.0,"gv_prod":-1976237.66,"gas_prod":-1061752.52,"mant_prod":0.0,"sueldos_com":-9028338.0,"sac_com":-442996.0,"movilidad":-2514859.79,"publicidad":-1224448.28,"comisiones":-12508783.67,"hon_com":-2500000.0,"seg_com":-1333552.0,"seg_flota":-1062685.0,"flete":-5925926.2,"comex":-410610.71,"gcom":-3629292.34,"sueldos_adm":-8742965.0,"sac_adm":-549065.0,"gv_adm":-1249680.15,"alquileres":-800000.0,"luz":-5068701.32,"sistema":0.0,"hon_adm":-5170680.0,"libreria":-78037.13,"seg_adm":0.0,"sellados":0.0,"gv_otros":-2950466.29,"descuentos":-3634077.78,"hon_prod":-570503.0,"mant_limp":-404092.62,"seg_prod":-32430.12,"obras_soc":-4360743.58,"iibb":-50854.14,"imp_cheque":-5240936.45,"com_banc":-2387077.75,"cargas":-44145749.66,"asimra":-536042.91,"uom":-2292312.44,"descubierto":0.0,"venta_valores":-10963357.97,"prestamos":-17215376.34,"afip_planes":-12133788.25,"afip_sct":0.0,"arba":-1041086.0,"uom_mor":0.0,"sh_mor":0.0,"despidos":0.0,"acuerdos":0.0,"redondeo":-25848.71,"imp_gan":0.0,"ret_eduardo":9663063.09,"ret_facundo":7881391.87,"ret_juanma":3962000.0,"dif_cambio":0},"manual":{},"congeladoPor":"Excel histórico","congeladoEn":"2026-10-01T18:00:00Z"},"spotsline:2025-12":{"unidad":"spotsline","mes":"2025-12","estado":"congelado","valores":{"ventas":260202549.12,"cmv":-108619317.33,"sueldos_prod":-69148259.0,"sac_prod":0.0,"gv_prod":-2123722.32,"gas_prod":-1440468.66,"mant_prod":-1137940.0,"sueldos_com":-8463304.0,"sac_com":0.0,"movilidad":-2336584.61,"publicidad":-340000.0,"comisiones":-14832717.0,"hon_com":-3300000.0,"seg_com":-1333552.0,"seg_flota":-1062685.0,"flete":-4749980.61,"comex":-39193.01,"gcom":-2979359.58,"sueldos_adm":-9815670.0,"sac_adm":0.0,"gv_adm":-7255784.05,"alquileres":-800000.0,"luz":-4535329.46,"sistema":0.0,"hon_adm":-5049335.66,"libreria":-73021.0,"seg_adm":0.0,"sellados":-70582.77,"gv_otros":-2925805.61,"descuentos":-4453783.87,"hon_prod":-742786.9,"mant_limp":-53339.76,"seg_prod":0.0,"obras_soc":-3728661.55,"iibb":0.0,"imp_cheque":-12648667.51,"com_banc":-4733776.51,"cargas":-41190577.46,"asimra":-485722.71,"uom":-2086734.88,"descubierto":0.0,"venta_valores":-4791964.05,"prestamos":-11771572.32,"afip_planes":-7597716.18,"afip_sct":0.0,"arba":-1041086.0,"uom_mor":0.0,"sh_mor":0.0,"despidos":0.0,"acuerdos":0.0,"redondeo":3687907.8,"imp_gan":0.0,"ret_eduardo":6163278.74,"ret_facundo":4151544.63,"ret_juanma":7848048.98,"dif_cambio":0},"manual":{},"congeladoPor":"Excel histórico","congeladoEn":"2026-10-01T18:00:00Z"},"spotsline:2025-11":{"unidad":"spotsline","mes":"2025-11","estado":"congelado","valores":{"ventas":281652431.32,"cmv":-84683508.0,"sueldos_prod":-69266857.0,"sac_prod":0.0,"gv_prod":-4116458.17,"gas_prod":-1557805.19,"mant_prod":-207616.0,"sueldos_com":-11070181.0,"sac_com":0.0,"movilidad":-4627636.57,"publicidad":129980.0,"comisiones":-14292694.75,"hon_com":-990000.0,"seg_com":-1333552.0,"seg_flota":-1062685.0,"flete":-5641629.0,"comex":-7222191.37,"gcom":-2538980.9,"sueldos_adm":-8624423.0,"sac_adm":0.0,"gv_adm":-5276185.87,"alquileres":-800000.0,"luz":-4771780.66,"sistema":0.0,"hon_adm":-7506113.31,"libreria":0.0,"seg_adm":-6700.0,"sellados":-98124.34,"gv_otros":-3078654.29,"descuentos":-4950031.81,"hon_prod":-536050.0,"mant_limp":-109669.43,"seg_prod":0.0,"obras_soc":-3084105.33,"iibb":0.0,"imp_cheque":-4321603.68,"com_banc":-4215602.93,"cargas":-38726706.1,"asimra":-482462.07,"uom":-1946884.43,"descubierto":0.0,"venta_valores":-4129668.75,"prestamos":-19331492.83,"afip_planes":-7791309.47,"afip_sct":0.0,"arba":-1041086.0,"uom_mor":0.0,"sh_mor":0.0,"despidos":0.0,"acuerdos":0.0,"redondeo":676360.43,"imp_gan":0.0,"ret_eduardo":5977150.01,"ret_facundo":5520000.0,"ret_juanma":7136900.0,"dif_cambio":0},"manual":{},"congeladoPor":"Excel histórico","congeladoEn":"2026-10-01T18:00:00Z"},"spotsline:2025-10":{"unidad":"spotsline","mes":"2025-10","estado":"congelado","valores":{"ventas":291299805.21,"cmv":-81539160.52,"sueldos_prod":-74918872.0,"sac_prod":0.0,"gv_prod":-2044572.01,"gas_prod":-1697575.01,"mant_prod":-1097499.69,"sueldos_com":-11017329.0,"sac_com":0.0,"movilidad":-5804537.58,"publicidad":-405000.0,"comisiones":-27439035.63,"hon_com":0.0,"seg_com":-1333552.0,"seg_flota":-1062685.0,"flete":-4831616.33,"comex":-923673.43,"gcom":-2577575.82,"sueldos_adm":-8992548.0,"sac_adm":0.0,"gv_adm":-4201495.64,"alquileres":0.0,"luz":-4262602.32,"sistema":0.0,"hon_adm":-4910128.48,"libreria":-84513.87,"seg_adm":-20100.0,"sellados":-125541.38,"gv_otros":-2630191.75,"descuentos":-4044535.26,"hon_prod":-536050.0,"mant_limp":0.0,"seg_prod":0.0,"obras_soc":-3433628.26,"iibb":0.0,"imp_cheque":-2485443.4,"com_banc":-6114429.32,"cargas":-41771443.64,"asimra":-484767.6,"uom":-2158627.76,"descubierto":-405.77,"venta_valores":-3935036.99,"prestamos":0.0,"afip_planes":0.0,"afip_sct":0.0,"arba":-1041086.0,"uom_mor":0.0,"sh_mor":0.0,"despidos":0.0,"acuerdos":0.0,"redondeo":-143704.11,"imp_gan":0.0,"ret_eduardo":3000000.0,"ret_facundo":0.0,"ret_juanma":0.0,"dif_cambio":0},"manual":{},"congeladoPor":"Excel histórico","congeladoEn":"2026-10-01T18:00:00Z"},"spotsline:2026-10":{"unidad":"spotsline","mes":"2026-10","estado":"abierto","odoo":{"4.1.1.01.010":{"n":"Venta de mercadería","v":3012885.01},"5.1.1.01.030":{"n":"Compra de mercadería","v":-150000.0},"5.1.2.01.030":{"n":"Gastos Varios Producción","v":0.0},"5.1.2.01.050":{"n":"Servicio Eléctrico Producción","v":0.0},"5.1.2.01.070":{"n":"Servicio de Gas Producción","v":0.0},"5.1.2.01.090":{"n":"Mantenimiento y Reparaciones Producción","v":-7335.47},"5.2.1.01.050":{"n":"Movilidad y viáticos","v":0.0},"5.2.1.01.060":{"n":"Publicidad","v":0.0},"5.2.1.01.070":{"n":"Comisiones Pagadas","v":-1200000.0},"5.2.1.01.110":{"n":"Honorarios Comercial","v":0.0},"5.2.1.01.140":{"n":"Flete/Expresos","v":0.0},"5.2.1.02.031":{"n":"Gastos comerciales","v":-990000.0},"5.3.1.01.030":{"n":"Gastos varios Administrativos","v":0.0},"5.3.1.01.090":{"n":"Sistema y Software","v":0.0},"5.3.1.01.110":{"n":"Honorarios Administración","v":0.0},"5.3.1.01.120":{"n":"Artículos de librería","v":0.0},"5.3.1.01.130":{"n":"Seguros Administración","v":0.0},"5.3.1.01.140":{"n":"Sellados y Certificaciones","v":0.0},"5.01.01.022":{"n":"GASTOS VARIOS","v":-80000.0},"5.01.01.024":{"n":"DESCUENTO OTORGADO","v":-215233.98},"5.1.2.01.100":{"n":"Higiene y Seguridad","v":0.0},"5.1.2.01.120":{"n":"Mantenimiento y limpieza","v":0.0},"5.1.2.01.140":{"n":"Obras Sociales","v":0.0},"5.6.1.01.060":{"n":"Gastos Bancarios","v":0.0},"4.2.1.01.020":{"n":"Diferencias de cambio","v":0.0},"5.6.1.01.020":{"n":"Intereses por préstamos","v":0.0},"5.6.1.01.050":{"n":"Intereses fiscales","v":0.0},"4.2.1.01.030":{"n":"Ajuste por redondeo","v":13.48}},"manual":{},"odooImportado":"2026-10-01T18:00:00Z"},"spotsline:2026-09":{"unidad":"spotsline","mes":"2026-09","estado":"abierto","odoo":{"4.1.1.01.010":{"n":"Venta de mercadería","v":251009005.4},"5.1.1.01.030":{"n":"Compra de mercadería","v":-60734595.93},"5.1.2.01.030":{"n":"Gastos Varios Producción","v":-621000.0},"5.1.2.01.050":{"n":"Servicio Eléctrico Producción","v":0.0},"5.1.2.01.070":{"n":"Servicio de Gas Producción","v":-1549221.76},"5.1.2.01.090":{"n":"Mantenimiento y Reparaciones Producción","v":-735795.65},"5.2.1.01.050":{"n":"Movilidad y viáticos","v":-211082.49},"5.2.1.01.060":{"n":"Publicidad","v":-200000.0},"5.2.1.01.070":{"n":"Comisiones Pagadas","v":-11766192.83},"5.2.1.01.110":{"n":"Honorarios Comercial","v":-800000.0},"5.2.1.01.140":{"n":"Flete/Expresos","v":-6082089.79},"5.2.1.02.031":{"n":"Gastos comerciales","v":-385341.97},"5.3.1.01.030":{"n":"Gastos varios Administrativos","v":2500.0},"5.3.1.01.090":{"n":"Sistema y Software","v":-2019775.0},"5.3.1.01.110":{"n":"Honorarios Administración","v":-7827662.0},"5.3.1.01.120":{"n":"Artículos de librería","v":-23300.0},"5.3.1.01.130":{"n":"Seguros Administración","v":-344964.0},"5.3.1.01.140":{"n":"Sellados y Certificaciones","v":-21100.0},"5.01.01.022":{"n":"GASTOS VARIOS","v":-794472.0},"5.01.01.024":{"n":"DESCUENTO OTORGADO","v":-3869558.39},"5.1.2.01.100":{"n":"Higiene y Seguridad","v":-351000.0},"5.1.2.01.120":{"n":"Mantenimiento y limpieza","v":-367432.87},"5.1.2.01.140":{"n":"Obras Sociales","v":-1132250.83},"5.6.1.01.060":{"n":"Gastos Bancarios","v":0.0},"4.2.1.01.020":{"n":"Diferencias de cambio","v":41100.0},"5.6.1.01.020":{"n":"Intereses por préstamos","v":0.0},"5.6.1.01.050":{"n":"Intereses fiscales","v":0.0},"4.2.1.01.030":{"n":"Ajuste por redondeo","v":1187625.0}},"manual":{},"odooImportado":"2026-10-01T18:00:00Z"}};
+const FUENTES = {
+  costo:{t:"Costo de mercadería vendida",q:"Export de Odoo «Estadísticas de facturas»: columna Valor del inventario, por mes."},
+  sueldos:{t:"Sueldos y cargas sociales",q:"Liquidación de sueldos y formulario 931. UOM y Asimra aparte."},
+  seguros:{t:"Seguros",q:"Pólizas (socios, vendedores y flota)."},
+  bancos:{t:"Bancos",q:"Panel de cheques (Supabase): venta de cheques y gastos bancarios."},
+  cashflow:{t:"Cash Flow (intereses)",q:"Archivo Cash Flow SPL - Spotsline. Se toma lo que vence en cada mes según la fecha de vencimiento."},
+  formula:{t:"Fórmula",q:"Se calcula a partir de otra línea del mismo mes; no se carga a mano."},
+  socios:{t:"Retiro de socios",q:"Órdenes de pago a socios exportadas de Odoo + tarjetas de socios de la solapa TDC del Cash Flow."}
+};
+const MESES=["ene","feb","mar","abr","may","jun","jul","ago","sept","oct","nov","dic"];
+const LINEAS={}, REEMPL={}, MAPEADAS={}, ORDEN=[];
+const BLOQUE_FIJO=new Set(["ventas","cmv","imp"]); // bloques de una sola línea, no reciben ni ceden líneas
+function armarEstructura(){
+  EST=JSON.parse(JSON.stringify(EST_BASE));
+  const todas={}; EST.forEach(s=>{ if(s.l) s.l.forEach(l=>todas[l.id]=l); });
+  const ub=CONFIG.ubicacion||{}, movidas=new Set();
+  Object.values(ub).forEach(ids=>ids.forEach(id=>{ if(todas[id]) movidas.add(id); }));
+  EST.forEach(s=>{ if(!s.l||BLOQUE_FIJO.has(s.b)) return;
+    const base=s.l.filter(l=>!movidas.has(l.id));
+    s.l= ub[s.b] ? [...ub[s.b].filter(id=>todas[id]).map(id=>todas[id]), ...base.filter(l=>!ub[s.b].includes(l.id))] : base; });
+  for(const k in LINEAS) delete LINEAS[k]; for(const k in REEMPL) delete REEMPL[k]; for(const k in MAPEADAS) delete MAPEADAS[k]; ORDEN.length=0;
+  EST.forEach(s=>{ if(s.l) s.l.forEach(l=>{ LINEAS[l.id]={...l,b:s.b}; ORDEN.push(l.id); (l.c||[]).forEach(c=>MAPEADAS[c]=l.id); (l.r||[]).forEach(c=>REEMPL[c]=l.id); }); });
+}
+armarEstructura();
+
+let vista='eerr', docs={}, unidad='spotsline', medida='p', cerrados=new Set(), sel=null, store=null;
+const $=s=>document.querySelector(s);
+const st=(t,err)=>{const e=$("#status");e.textContent=t||"";$("#statusBox").classList.toggle("err",!!err);};
+const nombreMes=id=>{const[y,m]=id.split("-");return MESES[+m-1]+" "+y;};
+const nombreUnidad=u=>u==='cons'?'Consolidado':(UNIDADES.find(x=>x.id===u)||{}).n||u;
+const fmtP=new Intl.NumberFormat("es-AR",{maximumFractionDigits:0});
+const fmtM=new Intl.NumberFormat("es-AR",{minimumFractionDigits:1,maximumFractionDigits:1});
+const fmtPct=new Intl.NumberFormat("es-AR",{style:"percent",minimumFractionDigits:1,maximumFractionDigits:1});
+const r2=v=>Math.round(v*100)/100;
+function fmt(v,ventas){
+  if(v==null) return "";
+  if(Math.abs(v)<0.5) return "–";
+  if(medida==="m") return fmtM.format(v/1e6);
+  if(medida==="pct") return ventas? fmtPct.format(v/ventas):"–";
+  return fmtP.format(v);
+}
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function usuario(){
+  let u=""; try{u=localStorage.getItem("eerr_usuario")||"";}catch(_){}
+  if(!u){ u=(prompt("¿Cómo te llamás? (queda registrado al congelar meses)")||"").trim()||"Sin nombre"; try{localStorage.setItem("eerr_usuario",u);}catch(_){} }
+  return u;
+}
+
+/* ---------- Almacenamiento: Supabase, con respaldo local ---------- */
+function supaHeaders(extra){return {apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,...(extra||{})};}
+const remoto={
+  nombre:'Supabase',
+  async cargar(){
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${TABLA_EERR}?select=id,valor,updated_at`,{headers:supaHeaders()});
+    if(!r.ok) throw new Error('HTTP '+r.status+' '+(await r.text().catch(()=>'')).slice(0,200));
+    const rows=await r.json(); const out={}; rows.forEach(x=>{ if(x.valor) out[x.id]=x.valor; }); return out;
+  },
+  async guardar(lista){ // [{id, valor}]
+    const now=new Date().toISOString();
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${TABLA_EERR}?on_conflict=id`,{method:'POST',
+      headers:supaHeaders({'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'}),
+      body:JSON.stringify(lista.map(x=>({id:x.id,valor:x.valor,updated_at:now})))});
+    if(!r.ok) throw new Error('HTTP '+r.status+' '+(await r.text().catch(()=>'')).slice(0,200));
+  }
+};
+const local={
+  nombre:'este navegador', KEY:'eerr_multi_v1',
+  async cargar(){ let d=null; try{d=JSON.parse(localStorage.getItem(this.KEY)||'null');}catch(_){} return d||JSON.parse(JSON.stringify(SEED)); },
+  async guardar(lista){ const d=await this.cargar(); lista.forEach(x=>d[x.id]=x.valor); try{localStorage.setItem(this.KEY,JSON.stringify(d));}catch(_){} }
+};
+async function guardar(cambios){ // {id: doc}
+  const lista=Object.entries(cambios).map(([id,valor])=>({id,valor}));
+  Object.assign(docs,cambios); render();
+  try{ await store.guardar(lista); }
+  catch(e){ st("No se pudo guardar en "+store.nombre+": "+e.message,true); throw e; }
+}
+function tomarConfig(){ const c=docs.config; delete docs.config; CONFIG=c&&c.ubicacion?c:{ubicacion:{}}; armarEstructura(); }
+async function guardarConfig(nueva){
+  const prev=CONFIG; CONFIG=nueva; armarEstructura(); render();
+  try{ await store.guardar([{id:"config",valor:{...nueva,actualizadoPor:usuario(),actualizadoEn:new Date().toISOString()}}]); }
+  catch(e){ CONFIG=prev; armarEstructura(); render(); st("No se pudo guardar el cambio de ubicación: "+e.message,true); }
+}
+async function moverLinea(id,bloque,antesDe){
+  const l=LINEAS[id]; if(!l||BLOQUE_FIJO.has(bloque)||BLOQUE_FIJO.has(l.b)) return;
+  if(antesDe===id) return;
+  const destino=EST.find(s=>s.b===bloque); if(!destino) return;
+  // aviso si hay meses congelados con valor en esa línea y cambia de bloque
+  if(l.b!==bloque){
+    const fr=Object.values(docs).filter(d=>d.estado==="congelado"&&Math.abs(((d.valores||{})[id])||0)>=1).map(d=>nombreUnidad(d.unidad)+" "+nombreMes(d.mes));
+    const dest=destino.t;
+    if(!confirm(`Mover "${l.n}" a "${dest}".${fr.length?`\n\nOjo: tiene valores en ${fr.length} meses congelados (${fr.slice(0,4).join(", ")}${fr.length>4?"…":""}). Los valores no cambian, pero sí los totales de bloque y, si cruza el EBITDA, los subtotales de esos meses.`:""}\n\nEl cambio se ve para todo el equipo.`)) return;
+  }
+  const ub={}; EST.forEach(s=>{ if(s.l&&!BLOQUE_FIJO.has(s.b)) ub[s.b]=s.l.map(x=>x.id).filter(x=>x!==id); });
+  const arr=ub[bloque]; const i=antesDe?arr.indexOf(antesDe):-1; if(i>=0) arr.splice(i,0,id); else arr.push(id);
+  await guardarConfig({ubicacion:ub}); st(`"${l.n}" ahora está en ${destino.t}.`);
+}
+async function restablecerEstructura(){ if(!confirm("¿Volver todas las líneas a su ubicación original?")) return; await guardarConfig({ubicacion:{}}); st("Ubicación de líneas restablecida."); }
+async function cargarTodo(){
+  try{
+    docs=await remoto.cargar(); store=remoto; tomarConfig();
+    $("#conn").textContent="Conectado a Supabase"; $("#conn").className="conn ok";
+    if(!Object.keys(docs).length){
+      st("La tabla está vacía. ");
+      const b=document.createElement("button"); b.className="btn ghost"; b.textContent="Cargar histórico inicial de Spotsline";
+      b.onclick=async()=>{ b.disabled=true; await guardar(JSON.parse(JSON.stringify(SEED))); st("Histórico inicial cargado en Supabase."); };
+      $("#status").appendChild(b);
+    } else st("");
+    autoSyncCheques();
+  }catch(e){
+    console.error(e); store=local; docs=await local.cargar(); tomarConfig();
+    $("#conn").textContent="Sin conexión a Supabase: guardando en este navegador"; $("#conn").className="conn bad";
+    st("Detalle: "+e.message+". Revisá que exista la tabla '"+TABLA_EERR+"'.",true);
+  }
+  render();
+}
+
+/* ---------- Cálculo ---------- */
+const getDoc=(u,m)=>docs[u+':'+m];
+const tieneOdoo=d=>d&&d.odoo&&Object.keys(d.odoo).length>0;
+function valorU(u,m,l){
+  const d=getDoc(u,m); if(!d) return {v:null,src:"pend"};
+  if(d.estado==="congelado") return {v:(d.valores||{})[l.id]??0,src:"frozen"};
+  if(l.s==="formula"){ const b=valorU(u,m,LINEAS[l.fx.base]); if(b.v==null) return {v:null,src:"pend",fx:true};
+    return {v:r2(l.fx.div.reduce((a,dv)=>a/dv,b.v)),src:"formula",base:b.v}; }
+  const man=(d.manual||{})[l.id];
+  if(l.s==="odoo"){
+    if(tieneOdoo(d)){ const o=d.odoo; const aj=r2(((d.ajustes||{})[l.id]||[]).reduce((a,x)=>a+x.v,0));
+      return {v:r2((l.c||[]).reduce((a,c)=>a+((o[c]&&o[c].v)||0),0)+aj),src:"odoo",aj}; }
+    return man==null?{v:null,src:"pend"}:{v:man,src:"manual"};
+  }
+  if(man==null) return l.cero?{v:0,src:"manual"}:{v:null,src:"pend"};
+  const org=(d.origen||{})[l.id];
+  return {v:man,src:(org==="cheques"||org==="cashflow"||org==="socios"||org==="cmv")?"sync":"manual",org};
+}
+function valor(u,m,l){
+  if(u!=='cons') return valorU(u,m,l);
+  let v=0, pend=false, alguno=false, todosFrozen=true;
+  UNIDADES.forEach(x=>{ const d=getDoc(x.id,m); if(!d) return; alguno=true; const r=valorU(x.id,m,l); if(r.v==null) pend=true; else v+=r.v; if(r.src!=="frozen") todosFrozen=false; });
+  if(!alguno) return {v:null,src:"pend"};
+  return {v:r2(v),src:todosFrozen?"frozen":"cons",parcial:pend};
+}
+function calcMes(u,m){
+  const r={lin:{},blo:{},sub:{},pend:0};
+  EST.forEach(s=>{
+    if(s.l){ let t=0; s.l.forEach(l=>{const x=valor(u,m,l);r.lin[l.id]=x;if(x.v==null||x.parcial)r.pend++;if(x.v!=null)t+=x.v;}); r.blo[s.b]=r2(t); }
+    else r.sub[s.sub]=r2(s.f.reduce((a,k)=>a+(r.blo[k]??r.sub[k]??0),0));
+  });
+  return r;
+}
+function mesesDe(u){
+  const set=new Set(); Object.values(docs).forEach(d=>{ if(u==='cons'||d.unidad===u) set.add(d.mes); });
+  return [...set].sort().reverse();
+}
+function estadoMes(u,m){
+  if(u!=='cons'){ const d=getDoc(u,m); return d?d.estado:null; }
+  const es=UNIDADES.map(x=>getDoc(x.id,m)).filter(Boolean).map(d=>d.estado);
+  return es.length&&es.every(e=>e==="congelado")?"congelado":"abierto";
+}
+const LOCK='<svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="8" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+
+/* ---------- Render ---------- */
+function renderUnidades(){
+  $("#unidades").innerHTML=[...UNIDADES.map(x=>[x.id,x.n]),['cons','Consolidado'],['ayuda','Ayuda']].map(([id,n])=>`<button data-unidad="${id}" aria-pressed="${id==='ayuda'?vista==='ayuda':(vista==='eerr'&&unidad===id)}"${id==='ayuda'?' style="margin-left:auto"':''}>${esc(n)}</button>`).join("");
+  $("#vistaEERR").hidden=vista!=='eerr'; $("#vistaAyuda").hidden=vista!=='ayuda';
+  const ro=unidad==='cons'; $("#impLbl").hidden=false; $("#btnCheques").disabled=false;
+  $("#desc").textContent= ro?"Suma línea por línea de Spotsline y SPL Distribuidora. Para cargar o congelar, entrá a cada unidad.":"Lo contable sale del export de Odoo; las líneas celestes se cargan desde su propia fuente. Los meses congelados quedan fijos.";
+}
+function render(){
+  renderUnidades();
+  if(vista==='ayuda'){ renderAyuda(); return; }
+  const ids=mesesDe(unidad);
+  const th=$("#tbl thead"), tb=$("#tbl tbody");
+  if(!ids.length){ th.innerHTML=""; tb.innerHTML=`<tr><td class="empty">Todavía no hay meses cargados para ${esc(nombreUnidad(unidad))}. ${unidad==='cons'?'':'Importá un export de Odoo para empezar.'}</td></tr>`; renderFuentes([],{}); renderDetalle(); return; }
+  const C={}; ids.forEach(m=>C[m]=calcMes(unidad,m));
+  th.innerHTML="<tr><th>Cuenta</th>"+ids.map(m=>{
+    const es=estadoMes(unidad,m), fr=es==="congelado";
+    const e= fr? "Congelado" : (C[m].pend? `Abierto, faltan ${C[m].pend}`:"Abierto, completo");
+    return `<th class="mes${sel===m?" sel":""}"><button data-mes="${m}" aria-label="Ver detalle de ${nombreMes(m)}"><span class="m">${fr?LOCK:""}${nombreMes(m)}</span><span class="e${fr?"":" abierto"}">${e}</span></button></th>`;
+  }).join("")+"</tr>";
+  let h="";
+  EST.forEach(s=>{
+    if(s.l){
+      const cer=cerrados.has(s.b), solo=s.l.length===1&&(s.b==="ventas"||s.b==="imp"||s.b==="cmv");
+      if(solo){ h+=`<tr class="bloque solo" data-solo="1"><td>${esc(s.t)}</td>${ids.map(m=>celdaLinea(m,s.l[0],C)).join("")}</tr>`; return; }
+      h+=`<tr class="bloque${cer?" cerrado":""}" data-b="${s.b}" data-drop="${s.b}"><td>${esc(s.t)}</td>${ids.map(m=>{const v=C[m].blo[s.b];const p=s.l.some(l=>{const x=C[m].lin[l.id];return x.v==null||x.parcial;});return `<td class="num" data-c="${m}|b|${s.b}" tabindex="0">${fmt(v,C[m].blo.ventas)}${p?'<span class="parcial" title="Incluye fuentes pendientes">●</span>':""}</td>`}).join("")}</tr>`;
+      if(!cer) s.l.forEach(l=>{
+        const nota=[l.nota,(l.c&&l.c.length)?"Cuentas Odoo: "+l.c.join(", "):"",l.s!=="odoo"?"Fuente: "+FUENTES[l.s].t:""].filter(Boolean).join("\n");
+        h+=`<tr class="linea" draggable="true" data-linea="${l.id}" data-bl="${s.b}"><td class="lbl"><span class="grip" title="Arrastrá para mover la línea a otro bloque" aria-hidden="true">⠿</span><span>${esc(l.n)} ${l.c&&l.c[0]?`<span class="code">${l.c[0]}</span>`:""}</span>${l.nota?`<span class="nota" title="${esc(nota)}">i</span>`:""}</td>`+ids.map(m=>celdaLinea(m,l,C)).join("")+"</tr>";
+      });
+    } else h+=`<tr class="sub${s.sub==="final"?" final":""}"><td>${esc(s.t)}</td>${ids.map(m=>{const v=C[m].sub[s.sub];return `<td class="num ${v<0?"neg":"pos"}" data-c="${m}|s|${s.sub}" tabindex="0">${fmt(v,C[m].blo.ventas)}</td>`}).join("")}</tr>`;
+  });
+  tb.innerHTML=h;
+  renderKpis(ids,C); renderFuentes(ids,C); renderDetalle();
+  if(lupaRef&&!$("#lupa").hidden){ if(ids.includes(lupaRef.m)) abrirLupa(lupaRef.m,lupaRef.kind,lupaRef.id); else cerrarLupa(); }
+}
+function editable(m,l){ const d=getDoc(unidad,m); return unidad!=='cons' && l.s!=="formula" && d && d.estado!=="congelado" && (l.s!=="odoo"||!tieneOdoo(d)); }
+function celdaLinea(m,l,C){
+  const x=C[m].lin[l.id];
+  const cls= x.src==="cons" ? (x.parcial?"src-pend":"") : "src-"+x.src;
+  const txt= x.v==null?"pendiente":fmt(x.v,C[m].blo.ventas)+(x.parcial?'<span class="parcial">●</span>':"")+(x.aj?'<span class="ajm" title="Incluye ajustes manuales">+aj</span>':"");
+  return `<td class="num ${cls}${editable(m,l)?" edit":""}" data-c="${m}|l|${l.id}" tabindex="0" role="button" aria-label="Ver qué toma ${esc(l.n)} en ${nombreMes(m)}" title="${esc(srcTxt(x,l))}">${txt}</td>`;
+}
+function renderKpis(ids,C){
+  const el=$("#kpis"); if(!ids.length){el.innerHTML="";return;}
+  const m=sel&&ids.includes(sel)?sel:ids[0], i=ids.indexOf(m), prev=ids[i+1], c=C[m], cp=prev?C[prev]:null;
+  const ventas=c.blo.ventas||0, pct=v=>ventas?fmtPct.format(v/ventas):"–";
+  const delta=(v,pv)=>{ if(pv==null) return ""; const d=v-pv; if(Math.abs(d)<0.5) return ""; return `<span class="delta ${d>0?"up":"down"}" title="vs ${nombreMes(prev)}">${d>0?"▲":"▼"} ${fmtM.format(Math.abs(d)/1e6)}M</span>`; };
+  const fr=estadoMes(unidad,m)==="congelado";
+  const card=(cls,t,v,s)=>`<div class="kpi ${cls}"><span class="t">${t}</span><span class="v ${v<0?"neg":v>0?"pos":""}">${v<0?"-":""}$${fmtP.format(Math.abs(v))}</span><span class="s">${s}</span></div>`;
+  el.innerHTML=
+    card("hero",`Resultado final · ${nombreMes(m)}`,c.sub.final,`${pct(c.sub.final)} de ventas ${delta(c.sub.final,cp&&cp.sub.final)} ${fr?"· congelado":c.pend?`<span class="badge">● ${c.pend} pendientes</span>`:""}`)+
+    card("","Ventas netas",ventas,delta(ventas,cp&&cp.blo.ventas)||"&nbsp;")+
+    card("","Ganancia bruta",c.sub.bruta,`margen ${pct(c.sub.bruta)} ${delta(c.sub.bruta,cp&&cp.sub.bruta)}`)+
+    card("","EBITDA",c.sub.ebitda,`${pct(c.sub.ebitda)} de ventas ${delta(c.sub.ebitda,cp&&cp.sub.ebitda)}`);
+}
+function srcTxt(x,l){
+  const f=FUENTES[l.s]?FUENTES[l.s].t:"";
+  return {odoo:"Odoo",manual:"Carga manual",formula:"Fórmula",sync:x.org==="cmv"?"Estadísticas de facturas":x.org==="cashflow"?"Cash Flow":x.org==="socios"?"Pagos Odoo + tarjetas":"Panel de cheques",frozen:"Mes congelado",cons:"Suma de ambas unidades",pend:"Falta cargar"+(f?": "+f:"")}[x.src]+(x.parcial?" (una unidad tiene pendientes)":"");
+}
+function renderFuentes(ids,C){
+  const el=$("#fuentes");
+  const unis=unidad==='cons'?UNIDADES.map(x=>x.id):[unidad];
+  let h=`<h2>Pendiente de completar</h2>`;
+  unis.forEach(u=>{
+    const ms=mesesDe(u).filter(m=>estadoMes(u,m)!=="congelado");
+    if(!ms.length){ h+=`<p class="sub">${esc(nombreUnidad(u))}: no hay meses abiertos.</p>`; return; }
+    const m=(sel&&ms.includes(sel))?sel:ms[0], c=calcMes(u,m);
+    const falt=Object.values(LINEAS).filter(l=>c.lin[l.id].v==null&&l.s!=="formula");
+    h+=`<div class="pend-mes"><h3>${esc(nombreUnidad(u))} · ${nombreMes(m)} <span class="pill${falt.length?"":" ok"}">${falt.length?falt.length+" pendientes":"Completo"}</span></h3>`;
+    if(!falt.length){ h+=`<p class="sub">Todas las líneas tienen dato. Revisá el detalle y congelalo.</p></div>`; return; }
+    const grupos={}; falt.forEach(l=>{const k=l.s==="odoo"?"odoo":l.s;(grupos[k]=grupos[k]||[]).push(l);});
+    Object.entries(grupos).forEach(([k,ls])=>{
+      h+=`<div class="fuente"><h4>${esc(k==="odoo"?"Export de Odoo":FUENTES[k].t)}</h4><span class="tag">${esc(k==="odoo"?"Falta importar el export de Odoo de este mes.":FUENTES[k].q)}</span><ul class="pend-list">${ls.map(l=>`<li><button type="button" class="lnk" data-go-u="${u}" data-go="${m}|l|${l.id}">${esc(l.n)}${{prod:" (producción)",com:" (comercial)",adm:" (administración)"}[l.b]||""}</button></li>`).join("")}</ul></div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`<p class="sub" style="margin-top:10px">Muestra el mes elegido en la tabla o, si no elegiste ninguno, el último mes abierto. La lista completa de fuentes está en Ayuda.</p>`;
+  el.innerHTML=h;
+}
+function renderDetalle(){
+  const el=$("#detalle");
+  if(!sel||!mesesDe(unidad).includes(sel)){ el.innerHTML=`<h2>Detalle del mes</h2><p class="sub">Tocá un mes en el encabezado de la tabla para congelarlo o descongelarlo, y ver qué trajo Odoo y qué cuentas se reemplazan por fuentes externas.</p>`; return; }
+  if(unidad==='cons'){
+    el.innerHTML=`<h2>${nombreMes(sel)}, consolidado</h2>`+UNIDADES.map(x=>{const d=getDoc(x.id,sel);return `<div class="frozenbox"><span><strong>${esc(x.n)}</strong>: ${!d?"sin datos":d.estado==="congelado"?"congelado"+(d.congeladoPor?" por "+esc(d.congeladoPor):""):"abierto"}</span></div>`;}).join("")+`<p class="sub">Para congelar o cargar datos, entrá a cada unidad.</p>`;
+    return;
+  }
+  const d=getDoc(unidad,sel), o=d.odoo||{}, fr=d.estado==="congelado";
+  const rows=(arr)=>arr.length?`<table><tbody>${arr.map(([c,x,extra])=>`<tr><td><span class="code">${c}</span> ${esc(x.n||"")}${extra?`<br><span class="code">${esc(extra)}</span>`:""}</td><td class="num">${fmtP.format(x.v)}</td></tr>`).join("")}</tbody></table>`:`<p class="sub">Ninguna.</p>`;
+  const repl=Object.entries(o).filter(([c])=>REEMPL[c]).map(([c,x])=>[c,x,"Se reemplaza por: "+LINEAS[REEMPL[c]].n]);
+  const sinMap=Object.entries(o).filter(([c])=>!MAPEADAS[c]&&!REEMPL[c]).map(([c,x])=>[c,x]);
+  const pend=calcMes(unidad,sel).pend;
+  let h=`<h2>${nombreMes(sel)}, ${esc(nombreUnidad(unidad))}</h2>`;
+  h+= fr ? `<div class="frozenbox"><span>${LOCK} Congelado${d.congeladoPor?" por <strong>"+esc(d.congeladoPor)+"</strong>":""}${d.congeladoEn?" el "+new Date(d.congeladoEn).toLocaleDateString("es-AR"):""}. Los valores quedan fijos y no se pisan al importar.</span><button class="btn ghost" data-accion="descongelar">Descongelar</button></div>`
+         : `<div class="frozenbox"><span>Mes abierto${pend?`, con ${pend} líneas pendientes (se congelarían en cero)`:""}.</span><button class="btn" data-accion="congelar">${LOCK} Congelar mes</button></div>`;
+  if(d.odooImportado) h+=`<p class="sub">Odoo importado el ${new Date(d.odooImportado).toLocaleDateString("es-AR")}.</p>`;
+  if(Object.keys(o).length){
+    if(fr){
+      const dif=Object.values(LINEAS).filter(l=>l.s==="odoo"&&l.c&&l.c.length).map(l=>{const ov=l.c.reduce((a,c)=>a+((o[c]&&o[c].v)||0),0);const hv=(d.valores||{})[l.id]||0;return [l,hv,ov];}).filter(([,a,b])=>Math.abs(a-b)>=1);
+      h+=`<div class="det"><h4>Diferencias entre lo congelado y Odoo</h4>${dif.length?`<table><thead><tr><th>Línea</th><th class="num">Congelado</th><th class="num">Odoo</th></tr></thead><tbody>${dif.map(([l,a,b])=>`<tr><td>${esc(l.n)}</td><td class="num">${fmtP.format(a)}</td><td class="num">${fmtP.format(b)}</td></tr>`).join("")}</tbody></table>`:`<p class="sub">Coinciden todas las líneas de Odoo.</p>`}</div>`;
+    }
+    h+=`<div class="det"><h4>Cuentas de Odoo reemplazadas por fuentes externas</h4>${rows(repl)}<h4>Cuentas de Odoo sin clasificar</h4>${rows(sinMap)}</div>`;
+  } else h+=`<p class="sub">Este mes no tiene export de Odoo cargado.</p>`;
+  el.innerHTML=h;
+}
+
+/* ---------- Lupa: qué está tomando cada celda ---------- */
+const fmtF=f=>{const s=String(f||""); const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m?`${m[3]}/${m[2]}/${m[1]}`:s;};
+let lupaRef=null;
+function tablaDet(rows){
+  if(!rows||!rows.length) return `<p class="sub">No hay movimientos para este mes: por eso da cero.</p>`;
+  const porHoja={}; rows.forEach(r=>(porHoja[r.h]=porHoja[r.h]||[]).push(r));
+  return Object.entries(porHoja).map(([hj,rs])=>{ const cf=rs.some(r=>r.f); return `<h4>${esc(hj)} <span class="code">(${rs.length})</span></h4><div class="det"><table><thead><tr>${cf?"<th>Vto.</th>":""}<th>Detalle</th><th class="num">Importe</th></tr></thead><tbody>${(cf?rs.sort((a,b)=>String(a.f).localeCompare(String(b.f))):rs).map(r=>`<tr>${cf?`<td>${esc(fmtF(r.f))}</td>`:""}<td>${esc(r.c||"")}${r.x?`<br><span class="code">${esc(r.x)}</span>`:""}</td><td class="num">${fmtP.format(r.v)}</td></tr>`).join("")}<tr class="tot">${cf?"<td></td>":""}<td>Total ${esc(hj)}</td><td class="num">${fmtP.format(rs.reduce((a,r)=>a+r.v,0))}</td></tr></tbody></table></div>`; }).join("");
+}
+function tablaOdoo(d,l){
+  const o=d.odoo||{}; const rows=(l.c||[]).map(c=>[c,o[c]]);
+  return `<div class="det"><table><thead><tr><th>Cuenta Odoo</th><th class="num">Importe</th></tr></thead><tbody>${rows.map(([c,x])=>`<tr><td><span class="code">${c}</span> ${esc(x?x.n:"(no vino en el export)")}</td><td class="num">${fmtP.format(x?x.v:0)}</td></tr>`).join("")}<tr class="tot"><td>Total</td><td class="num">${fmtP.format(rows.reduce((a,[,x])=>a+(x?x.v:0),0))}</td></tr></tbody></table></div>`;
+}
+function lupaLinea(u,m,l){
+  const d=getDoc(u,m); const x=valorU(u,m,l);
+  let h=`<div class="dwv ${x.v<0?"neg":""}">${x.v==null?"Pendiente":"$ "+fmtP.format(x.v)}</div>`;
+  h+=`<p class="regla"><strong>Regla:</strong> ${esc(reglaDe(l))}</p>`;
+  if(!d){ return h+`<p class="sub">Este mes no existe todavía para ${esc(nombreUnidad(u))}.</p>`; }
+  const org=(d.origen||{})[l.id], det=(d.detalle||{})[l.id];
+  if(x.src==="frozen"){
+    h+=`<div class="frozenbox">${LOCK} Mes congelado${d.congeladoPor?" por "+esc(d.congeladoPor):""}${d.congeladoEn?" el "+new Date(d.congeladoEn).toLocaleDateString("es-AR"):""}. El valor está fijo.</div>`;
+    if(d.congeladoPor==="Excel histórico") h+=`<p class="sub">Valor tomado del Excel retrabajado (histórico), no tiene detalle de origen.</p>`;
+    if(det) h+=`<p class="sub">Origen al congelar: ${org==="cashflow"?"Cash Flow":org==="cheques"?"panel de cheques":"carga manual"}.</p>`+tablaDet(det);
+    else if(l.s==="odoo"&&tieneOdoo(d)) h+=`<p class="sub">Referencia: lo que trae Odoo hoy para este mes.</p>`+tablaOdoo(d,l);
+    return h;
+  }
+  if(l.s==="formula"){ const bl=LINEAS[l.fx.base];
+    if(x.src==="pend") return h+`<p class="sub">Falta ${esc(bl.n)} para poder calcularla.</p><p><button type="button" class="lnk" data-go="${m}|l|${bl.id}">Ir a ${esc(bl.n)}</button></p>`;
+    return h+`<div class="det"><table><tbody><tr class="clk" data-go="${m}|l|${bl.id}"><td>${esc(bl.n)}</td><td class="num">${fmtP.format(x.base)}</td></tr>${l.fx.div.map(dv=>`<tr><td>÷ ${dv}</td><td class="num"></td></tr>`).join("")}<tr class="tot"><td>${esc(l.n)}</td><td class="num">${fmtP.format(x.v)}</td></tr></tbody></table></div>`; }
+  if(x.src==="odoo"){
+    const ajs=(d.ajustes||{})[l.id]||[], puede=u===unidad&&unidad!=='cons'&&d.estado!=="congelado";
+    h+=`<p class="sub">Export de Odoo${d.odooImportado?" importado el "+new Date(d.odooImportado).toLocaleDateString("es-AR"):""}.</p>`+tablaOdoo(d,l);
+    h+=`<h4>Ajustes manuales</h4>`+(ajs.length?`<div class="det"><table><tbody>${ajs.map(a=>`<tr><td>${esc(a.nota||"(sin nota)")}<br><span class="code">${esc(a.por||"")}${a.en?" · "+new Date(a.en).toLocaleString("es-AR"):""}</span></td><td class="num">${fmtP.format(a.v)}</td>${puede?`<td style="width:28px"><button type="button" class="lnk" data-ajdel="${a.id}" title="Quitar ajuste">✕</button></td>`:""}</tr>`).join("")}<tr class="tot"><td>Total línea (Odoo + ajustes)</td><td class="num">${fmtP.format(x.v)}</td>${puede?"<td></td>":""}</tr></tbody></table></div>`:`<p class="sub">Sin ajustes.</p>`);
+    if(puede) h+=`<section class="dws edit"><h3>Agregar ajuste</h3><label class="sub" for="ajV">Importe (gastos en negativo)</label><input id="ajV" inputmode="decimal" placeholder="-577.000"><label class="sub" for="ajN" style="display:block;margin-top:8px">Nota</label><input id="ajN" style="text-align:left" placeholder="Ej.: OSDE socios"><div class="row"><button class="btn" id="ajOk" type="button">Agregar ajuste</button></div></section>`;
+    return h;
+  }
+  if(x.src==="sync"){
+    if(org==="socios"){ const g={pagos:(det||[]).filter(r=>r.g==="pagos"),tdc:(det||[]).filter(r=>r.g==="tdc")};
+      return h+`<p class="sub">${d.pagosSync?`Pagos de Odoo aplicados el ${new Date(d.pagosSync).toLocaleString("es-AR")}`:"Pagos de Odoo: sin importar"}. ${d.tdcSync?`Tarjetas aplicadas el ${new Date(d.tdcSync).toLocaleString("es-AR")}`:"Tarjetas: sin importar"}.</p>`+tablaDet(det); }
+    if(org==="cmv") return h+`<p class="sub">Archivo "${esc(d.cmvArchivo||"")}", aplicado el ${d.cmvSync?new Date(d.cmvSync).toLocaleString("es-AR"):""}.${d.cmvInfo?` Ventas del reporte $${fmtP.format(d.cmvInfo.ventas)} · margen ${fmtPct.format(d.cmvInfo.ventas?d.cmvInfo.margen/d.cmvInfo.ventas:0)} · ${fmtP.format(d.cmvInfo.lineas)} líneas.`:""}</p>`+tablaDet(det);
+    const cuando=org==="cashflow"?(d.cashflowSync&&`Cash Flow "${esc(d.cashflowArchivo||"")}", aplicado el ${new Date(d.cashflowSync).toLocaleString("es-AR")}`):(d.chequesSync&&`Panel de cheques, aplicado el ${new Date(d.chequesSync).toLocaleString("es-AR")}`);
+    return h+`<p class="sub">${cuando||""}</p>`+(det?tablaDet(det):`<p class="sub">Se aplicó antes de guardar el detalle. Volvé a importar para verlo.</p>`);
+  }
+  if(x.src==="manual"){ const mi=(d.manualInfo||{})[l.id]; return h+`<p class="sub">${l.cero&&(d.manual||{})[l.id]==null?"Sin fuente: arranca en 0.":"Carga manual"+(mi?` de ${esc(mi.por)} el ${new Date(mi.en).toLocaleString("es-AR")}`:"")+"."}</p>`; }
+  return h+`<p class="sub">Todavía no hay dato cargado.</p>`;
+}
+function abrirLupa(m,kind,id){
+  lupaRef={m,kind,id}; const C=calcMes(unidad,m); let titulo="", k=`${nombreMes(m)} · ${nombreUnidad(unidad)}`, h="";
+  if(kind==="l"){
+    const l=LINEAS[id]; titulo=l.n;
+    if(unidad==='cons'){
+      h=`<div class="dwv">$ ${fmtP.format(C.lin[id].v||0)}</div><p class="regla"><strong>Regla:</strong> ${esc(reglaDe(l))}</p>`+UNIDADES.map(x=>`<section class="dws"><h3>${esc(x.n)}</h3>${lupaLinea(x.id,m,l)}</section>`).join("");
+    } else {
+      h=lupaLinea(unidad,m,l);
+      if(editable(m,l)){ const d=getDoc(unidad,m), cur=(d.manual||{})[id];
+        h+=`<section class="dws edit"><h3>Corregir a mano</h3><label for="lupaIn" class="sub">Importe (los gastos en negativo). Vacío = pendiente.</label><input id="lupaIn" inputmode="decimal" value="${cur!=null?String(cur).replace(".",","):""}" placeholder="-1.234.567,89"><div class="row"><button class="btn" id="lupaOk">Guardar</button></div>${(d.origen||{})[id]&&(d.origen||{})[id]!=="manual"?`<p class="sub">Ojo: la próxima sincronización de la fuente lo vuelve a pisar.</p>`:""}</section>`; }
+    }
+    if(!BLOQUE_FIJO.has(LINEAS[id].b)){
+      h+=`<section class="dws"><h3>Ubicación</h3><p class="sub">Está en <strong>${esc(EST.find(s=>s.b===LINEAS[id].b).t)}</strong>. También podés arrastrarla desde el ⠿ en la tabla.</p><div class="row" style="display:flex;gap:6px;flex-wrap:wrap"><select id="lupaMov" style="flex:1;min-width:180px;background:var(--paper);border:1px solid #3a3a3a;border-radius:7px;padding:7px;color:var(--ink)">${EST.filter(s=>s.l&&!BLOQUE_FIJO.has(s.b)).map(s=>`<option value="${s.b}" ${s.b===LINEAS[id].b?"selected":""}>${esc(s.t)}</option>`).join("")}</select><button class="btn ghost" id="lupaMovOk">Mover</button></div></section>`;
+    }
+  } else if(kind==="b"){
+    const s=EST.find(z=>z.b===id); titulo=s.t;
+    h=`<div class="dwv ${C.blo[id]<0?"neg":""}">$ ${fmtP.format(C.blo[id])}</div><p class="sub">Suma de las líneas del bloque. Tocá una para ver su detalle.</p><div class="det"><table><tbody>${s.l.map(l=>{const x=C.lin[l.id];return `<tr class="clk" data-go="${m}|l|${l.id}"><td>${esc(l.n)} <span class="code">${esc(srcTxt(x,l))}</span></td><td class="num">${x.v==null?"pendiente":fmtP.format(x.v)}</td></tr>`;}).join("")}<tr class="tot"><td>Total</td><td class="num">${fmtP.format(C.blo[id])}</td></tr></tbody></table></div>`;
+  } else {
+    const s=EST.find(z=>z.sub===id); titulo=s.t;
+    const parte=f=>{const b=EST.find(z=>z.b===f||z.sub===f); return [b.t, C.blo[f]??C.sub[f], b.b?"b":"s", f];};
+    h=`<div class="dwv ${C.sub[id]<0?"neg":""}">$ ${fmtP.format(C.sub[id])}</div><p class="sub">Se calcula sumando:</p><div class="det"><table><tbody>${s.f.map(f=>{const [n,v,kd,fid]=parte(f);return `<tr class="clk" data-go="${m}|${kd}|${fid}"><td>${esc(n)}</td><td class="num">${fmtP.format(v)}</td></tr>`;}).join("")}<tr class="tot"><td>${esc(s.t)}</td><td class="num">${fmtP.format(C.sub[id])}</td></tr></tbody></table></div>`;
+  }
+  $("#lupaK").textContent=k; $("#lupaT").textContent=titulo; $("#lupaB").innerHTML=h; $("#lupa").hidden=false;
+  document.querySelectorAll("td.lupa-on").forEach(x=>x.classList.remove("lupa-on"));
+  const td=document.querySelector(`td[data-c="${m}|${kind}|${id}"]`); if(td) td.classList.add("lupa-on");
+  const ajb=$("#ajOk"); if(ajb){ ajb.onclick=()=>agregarAjuste(m,id); $("#ajN").onkeydown=e=>{if(e.key==="Enter")agregarAjuste(m,id);}; }
+  document.querySelectorAll("[data-ajdel]").forEach(b=>b.onclick=()=>quitarAjuste(m,id,b.dataset.ajdel));
+  const mv=$("#lupaMovOk"); if(mv) mv.onclick=()=>{ const b=$("#lupaMov").value; if(b!==LINEAS[id].b) moverLinea(id,b,null); };
+  const inp=$("#lupaIn"); if(inp){ inp.onkeydown=e=>{if(e.key==="Enter")guardarLupa();}; $("#lupaOk").onclick=guardarLupa; }
+}
+async function agregarAjuste(m,id){
+  const v=parseNum($("#ajV").value); if(v==null||Number.isNaN(v)){ $("#ajV").setCustomValidity("Número inválido"); $("#ajV").reportValidity(); return; }
+  const d=getDoc(unidad,m), aj={...(d.ajustes||{})};
+  aj[id]=[...(aj[id]||[]),{id:"a"+Date.now().toString(36),v,nota:$("#ajN").value.trim(),por:usuario(),en:new Date().toISOString()}];
+  try{ await guardar({[unidad+':'+m]:{...d,ajustes:aj}}); st(`Ajuste agregado a ${LINEAS[id].n}.`); }catch(_){}
+}
+async function quitarAjuste(m,id,aid){
+  if(!confirm("¿Quitar este ajuste?")) return;
+  const d=getDoc(unidad,m), aj={...(d.ajustes||{})}; aj[id]=(aj[id]||[]).filter(a=>a.id!==aid); if(!aj[id].length) delete aj[id];
+  try{ await guardar({[unidad+':'+m]:{...d,ajustes:aj}}); st("Ajuste quitado."); }catch(_){}
+}
+async function guardarLupa(){
+  const {m,id}=lupaRef, l=LINEAS[id], d=getDoc(unidad,m), inp=$("#lupaIn");
+  const v=parseNum(inp.value); if(Number.isNaN(v)){inp.setCustomValidity("Número inválido");inp.reportValidity();return;}
+  const man={...(d.manual||{})}, org={...(d.origen||{})}, mi={...(d.manualInfo||{})}, det={...(d.detalle||{})};
+  if(v==null){delete man[id];delete org[id];delete mi[id];} else {man[id]=v; org[id]="manual"; mi[id]={por:usuario(),en:new Date().toISOString()};}
+  delete det[id];
+  try{ await guardar({[unidad+':'+m]:{...d,manual:man,origen:org,manualInfo:mi,detalle:det}}); st(`${l.n} de ${nombreMes(m)} guardado.`); abrirLupa(m,"l",id);}catch(_){}
+}
+function cerrarLupa(){ $("#lupa").hidden=true; lupaRef=null; document.querySelectorAll("td.lupa-on").forEach(x=>x.classList.remove("lupa-on")); }
+
+/* ---------- Congelar ---------- */
+async function congelar(u,m){
+  const d=getDoc(u,m), c=calcMes(u,m);
+  if(c.pend && !confirm(`${nombreMes(m)} tiene ${c.pend} líneas pendientes. Si lo congelás quedan en cero. ¿Seguir?`)) return;
+  const valores={}; ORDEN.forEach(id=>valores[id]=c.lin[id].v??0);
+  const nd={...d,estado:"congelado",valores,congeladoPor:usuario(),congeladoEn:new Date().toISOString()};
+  await guardar({[u+':'+m]:nd}); st(`${nombreMes(m)} congelado.`);
+}
+async function descongelar(u,m){
+  const d=getDoc(u,m);
+  if(!confirm(`¿Descongelar ${nombreMes(m)} de ${nombreUnidad(u)}? Volverá a calcularse con Odoo y las fuentes, y podrá pisarse al importar.`)) return;
+  const man={...(d.manual||{})};
+  ORDEN.forEach(id=>{const l=LINEAS[id]; const calcOdoo=l.s==="odoo"&&tieneOdoo(d); if(!calcOdoo&&man[id]==null&&d.valores&&d.valores[id]!=null) man[id]=d.valores[id];});
+  const nd={...d,estado:"abierto",manual:man,valoresAlCongelar:d.valores,descongeladoPor:usuario(),descongeladoEn:new Date().toISOString()};
+  delete nd.valores;
+  await guardar({[u+':'+m]:nd}); st(`${nombreMes(m)} descongelado. Los valores que no vienen de Odoo quedaron como carga manual.`);
+}
+
+/* ---------- Carga manual ---------- */
+function parseNum(s){
+  s=String(s).trim().replace(/\s|\$/g,""); if(!s) return null;
+  if(/,\d{1,2}$/.test(s)) s=s.replace(/\./g,"").replace(",",".");
+  else if(/^-?\d{1,3}(\.\d{3})+$/.test(s)) s=s.replace(/\./g,"");
+  const n=Number(s); return isFinite(n)?n:NaN;
+}
+function abrirPop(td){
+  const [m,id]=td.dataset.edit.split("|"), l=LINEAS[id], d=getDoc(unidad,m), cur=(d.manual||{})[id];
+  const p=$("#pop"); const r=td.getBoundingClientRect();
+  p.innerHTML=`<label for="popIn">${esc(l.n)}, ${nombreMes(m)}</label><input id="popIn" inputmode="decimal" value="${cur!=null?String(cur).replace(".",","):""}" placeholder="-1.234.567,89"><small>Los gastos van en negativo. Vacío = pendiente.</small><div class="row"><button class="btn ghost" data-a="x">Cancelar</button><button class="btn" data-a="ok">Guardar</button></div>`;
+  p.hidden=false;
+  p.style.top=Math.min(r.bottom+6,innerHeight-170)+"px"; p.style.left=Math.max(8,Math.min(r.right-260,innerWidth-268))+"px";
+  const inp=$("#popIn"); inp.focus(); inp.select();
+  const ok=async()=>{
+    const v=parseNum(inp.value); if(Number.isNaN(v)){inp.setCustomValidity("Número inválido");inp.reportValidity();return;}
+    const man={...(d.manual||{})}, org={...(d.origen||{})}; if(v==null){delete man[id];delete org[id];} else {man[id]=v; org[id]="manual";}
+    p.hidden=true;
+    await guardar({[unidad+':'+m]:{...d,manual:man,origen:org}}).catch(()=>{}); st(`${l.n} de ${nombreMes(m)} guardado.`);
+  };
+  p.onclick=e=>{const a=e.target.dataset.a; if(a==="x")p.hidden=true; if(a==="ok")ok();};
+  inp.onkeydown=e=>{if(e.key==="Enter")ok(); if(e.key==="Escape")p.hidden=true;};
+}
+
+/* ---------- Importar Odoo ---------- */
+let impData=null;
+async function leerOdoo(file){
+  if(typeof XLSX==="undefined") throw new Error("No se pudo cargar el lector de Excel. Revisá la conexión y recargá.");
+  const wb=XLSX.read(await file.arrayBuffer(),{type:"array"});
+  const ws=wb.Sheets[wb.SheetNames.find(n=>/resultado/i.test(n))||wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
+  const re=/^(ene|feb|mar|abr|may|jun|jul|ago|sept?|oct|nov|dic)\w*\.?\s+(\d{4})$/i;
+  let cols=null;
+  for(let i=0;i<Math.min(8,rows.length)&&!cols;i++){const c={};(rows[i]||[]).forEach((v,j)=>{const mm=v&&String(v).trim().match(re);if(mm){let k=mm[1].toLowerCase();if(k==="sep")k="sept";c[j]=mm[2]+"-"+String(MESES.indexOf(k)+1).padStart(2,"0");}}); if(Object.keys(c).length)cols=c;}
+  if(!cols) throw new Error('No encontré los meses en el encabezado (esperaba algo como "sept 2026").');
+  const data={}; Object.values(cols).forEach(m=>data[m]={});
+  rows.forEach(r=>{const code=r&&r[0]!=null&&String(r[0]).trim(); if(!code||!/^\d+(\.\d+)+$/.test(code))return;
+    Object.entries(cols).forEach(([j,m])=>{data[m][code]={n:String(r[1]||"").trim(),v:r2(Number(r[j])||0)};});});
+  return data;
+}
+async function abrirImport(file){
+  try{
+    st("Leyendo "+file.name+"…"); impData=await leerOdoo(file); st("");
+    const sugerida=/spl/i.test(file.name)?'spl':(unidad==='cons'?'spotsline':unidad);
+    $("#impInfo").textContent=`${file.name}: ${Object.keys(impData).length} meses encontrados.`;
+    $("#impUnidad").innerHTML=UNIDADES.map(x=>`<label class="chip"><input type="radio" name="impU" value="${x.id}" ${x.id===sugerida?"checked":""}>${esc(x.n)}</label>`).join("");
+    const pintarMeses=()=>{const u=document.querySelector('input[name="impU"]:checked').value;
+      $("#impMeses").innerHTML=Object.keys(impData).sort().reverse().map(m=>{const d=getDoc(u,m), fr=d&&d.estado==="congelado";
+        return `<label class="chip"><input type="checkbox" value="${m}" ${fr?"disabled":"checked"}>${fr?LOCK:""}${nombreMes(m)}${d&&!fr?' <span class="code">(reemplaza)</span>':''}</label>`;}).join("");};
+    pintarMeses(); $("#impUnidad").onchange=pintarMeses;
+    $("#dlgImp").showModal();
+  }catch(e){ st("No se pudo leer el archivo: "+e.message,true); }
+}
+$("#dlgImp").addEventListener("close",async()=>{
+  if($("#dlgImp").returnValue!=="ok"||!impData) return;
+  const u=document.querySelector('input[name="impU"]:checked').value;
+  const sel=[...document.querySelectorAll('#impMeses input:checked')].map(i=>i.value);
+  if(!sel.length){st("No elegiste ningún mes.");return;}
+  const now=new Date().toISOString(), cambios={};
+  sel.forEach(m=>{const d=getDoc(u,m); cambios[u+':'+m]= d? {...d,odoo:impData[m],odooImportado:now} : {unidad:u,mes:m,estado:"abierto",odoo:impData[m],manual:{},odooImportado:now};});
+  try{ await guardar(cambios); unidad=u; st(`Odoo importado en ${nombreUnidad(u)}: ${sel.map(nombreMes).join(", ")}.`); render(); }catch(_){}
+  impData=null;
+});
+
+/* ---------- Panel de cheques ---------- */
+let chqProp=null;
+const empresaDe=e=>String(e||'Spotsline').toUpperCase().includes('SPL')?'spl':'spotsline';
+const costoOp=o=>(Number(o.interes)||0)+(Number(o.iva)||0)+(Number(o.percep)||0)+(Number(o.sellos)||0)+(Number(o.comision)||0);
+function calcCheques(datos,u){
+  const P={}, DT={}, otros={};
+  const add=(m,k,x,det)=>{(P[m]=P[m]||{})[k]=r2(((P[m]||{})[k]||0)+x); if(det){ ((DT[m]=DT[m]||{})[k]=DT[m][k]||[]).push({...det,v:r2(x)}); }};
+  (datos.ops||[]).forEach(o=>{ if(empresaDe(o.empresa)!==u||!o.fecha) return; add(String(o.fecha).slice(0,7),'venta_valores',-costoOp(o),{h:'Venta de cheques',f:o.fecha,c:[o.banco,o.nro?'op '+o.nro:'',o.importe?'cheques $'+fmtP.format(o.importe):''].filter(Boolean).join(' · '),x:`Int ${fmtP.format(o.interes||0)} + IVA ${fmtP.format(o.iva||0)} + Perc ${fmtP.format(o.percep||0)} + Sellos ${fmtP.format(o.sellos||0)} + Com ${fmtP.format(o.comision||0)}`}); });
+  (datos.gastos||[]).forEach(g=>{ if(empresaDe(g.empresa)!==u||!g.fecha||!g.cost||g.exclude) return; const m=String(g.fecha).slice(0,7);
+    const k=Object.keys(MAPEO_CHEQUES).find(k=>(MAPEO_CHEQUES[k].cats||[]).includes(g.categoria));
+    if(k) add(m,k,-(Number(g.importe)||0),{h:'Gastos bancarios',f:g.fecha,c:[g.banco,g.concepto].filter(Boolean).join(' · '),x:g.categoria}); else { (otros[m]=otros[m]||{}); otros[m][g.categoria]=r2((otros[m][g.categoria]||0)-(Number(g.importe)||0)); } });
+  return {P,DT,otros};
+}
+// Sincroniza solo el panel de cheques en los meses abiertos, sin pisar cargas manuales
+async function autoSyncCheques(){
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${TABLA_CHEQUES}?id=eq.${FILA_CHEQUES}&select=valor,updated_at`,{headers:supaHeaders()});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const rows=await r.json(); const datos=rows[0]&&rows[0].valor&&rows[0].valor.datos; if(!datos) return;
+    const todos=[...(datos.ops||[]),...(datos.gastos||[])].map(x=>String(x.fecha||"").slice(0,7)).filter(m=>/^\d{4}-\d{2}$/.test(m)).sort();
+    if(!todos.length) return; const desde=todos[0], hasta=todos[todos.length-1];
+    const cambios={}, now=new Date().toISOString();
+    UNIDADES.forEach(x=>{ const {P,DT}=calcCheques(datos,x.id);
+      mesesDe(x.id).forEach(m=>{ const d=getDoc(x.id,m); if(!d||d.estado==="congelado"||m<desde||m>hasta) return;
+        const man={...(d.manual||{})}, org={...(d.origen||{})}, det={...(d.detalle||{})}; let cambio=false;
+        Object.keys(MAPEO_CHEQUES).forEach(k=>{ if(org[k]==="manual") return; const nv=(P[m]||{})[k]||0;
+          if(org[k]!=="cheques"||man[k]==null||Math.abs(man[k]-nv)>=0.01){ man[k]=nv; org[k]="cheques"; det[k]=((DT[m]||{})[k])||[]; cambio=true; } });
+        if(cambio) cambios[x.id+':'+m]={...d,manual:man,origen:org,detalle:det,chequesSync:now}; }); });
+    const n=Object.keys(cambios).length;
+    if(n){ await guardar(cambios); }
+    const t=$("#chqAuto"); if(t) t.textContent=`Panel de cheques sincronizado${n?` (${n} ${n===1?"mes actualizado":"meses actualizados"})`:""} · ${new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"})}`;
+  }catch(e){ console.warn("Sync cheques:",e); const t=$("#chqAuto"); if(t) t.textContent="No se pudo leer el panel de cheques"; }
+}
+async function abrirCheques(){
+  if(unidad==='cons'){st("Elegí Spotsline o SPL Distribuidora para traer datos del panel.");return;}
+  st("Leyendo el panel de cheques…");
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${TABLA_CHEQUES}?id=eq.${FILA_CHEQUES}&select=valor,updated_at`,{headers:supaHeaders()});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const rows=await r.json(); const v=rows[0]&&rows[0].valor; const datos=v&&v.datos;
+    if(!datos) throw new Error("El panel no tiene datos guardados.");
+    const {P,DT,otros}=calcCheques(datos,unidad);
+    if(false){ const add=null; (datos.ops||[]).forEach(o=>{ if(empresaDe(o.empresa)!==unidad||!o.fecha) return; add(o.fecha.slice(0,7),'venta_valores',-costoOp(o),{h:'Venta de cheques',f:o.fecha,c:[o.banco,o.nro?'op '+o.nro:'',o.importe?'cheques $'+fmtP.format(o.importe):''].filter(Boolean).join(' · '),x:`Int ${fmtP.format(o.interes||0)} + IVA ${fmtP.format(o.iva||0)} + Perc ${fmtP.format(o.percep||0)} + Sellos ${fmtP.format(o.sellos||0)} + Com ${fmtP.format(o.comision||0)}`}); });
+    (datos.gastos||[]).forEach(g=>{ if(empresaDe(g.empresa)!==unidad||!g.fecha||!g.cost||g.exclude) return; const m=g.fecha.slice(0,7);
+      const k=Object.keys(MAPEO_CHEQUES).find(k=>(MAPEO_CHEQUES[k].cats||[]).includes(g.categoria));
+      if(k) add(m,k,-(Number(g.importe)||0),{h:'Gastos bancarios',f:g.fecha,c:[g.banco,g.concepto].filter(Boolean).join(' · '),x:g.categoria}); else { (otros[m]=otros[m]||{}); otros[m][g.categoria]=r2((otros[m][g.categoria]||0)-(Number(g.importe)||0)); } }); }
+    const meses=Object.keys(P).sort().reverse();
+    chqProp={P,meses,DT};
+    st("");
+    $("#chqInfo").textContent=`${nombreUnidad(unidad)}. Mapeo propuesto, a validar. Panel actualizado el ${rows[0].updated_at?new Date(rows[0].updated_at).toLocaleString("es-AR"):"(sin fecha)"}.`;
+    if(!meses.length){ $("#chqBody").innerHTML=`<p class="sub">El panel no tiene movimientos de ${esc(nombreUnidad(unidad))}.</p>`; $("#chqOk").disabled=true; }
+    else{
+      $("#chqOk").disabled=false;
+      const keys=Object.keys(MAPEO_CHEQUES);
+      let h=`<div class="det" style="overflow-x:auto"><table class="cmp"><thead><tr><th>Mes</th>${keys.map(k=>`<th class="num">${esc(LINEAS[k].n)}</th>`).join("")}<th>Sin asignar</th></tr></thead><tbody>`;
+      meses.forEach(m=>{const d=getDoc(unidad,m), fr=d&&d.estado==="congelado";
+        h+=`<tr><td><label class="chip" style="border:0;padding:0"><input type="checkbox" value="${m}" ${fr?"disabled":"checked"}>${fr?LOCK:""}${nombreMes(m)}</label></td>`+
+          keys.map(k=>{const nv=P[m][k]||0; const cur=d&&!fr?(d.manual||{})[k]:null; const dif=cur!=null&&Math.abs(cur-nv)>=1;
+            return `<td class="num${dif?" dif":""}" title="${cur!=null?"Actual: "+fmtP.format(cur):"Sin valor actual"}">${fmtP.format(nv)}${dif?`<br><span class="code">antes ${fmtP.format(cur)}</span>`:""}</td>`;}).join("")+
+          `<td><span class="code">${Object.entries(otros[m]||{}).map(([c,x])=>esc(c)+": "+fmtP.format(x)).join("<br>")||"–"}</span></td></tr>`;});
+      h+=`</tbody></table></div><p class="sub" style="margin-top:10px">Los gastos bancarios solo cuentan los movimientos que el panel marca como costo. El IVA queda sin asignar hasta que definamos dónde va. Meses congelados no se tocan.</p>`;
+      $("#chqBody").innerHTML=h;
+    }
+    $("#dlgChq").showModal();
+  }catch(e){ st("No se pudo leer el panel de cheques: "+e.message,true); }
+}
+$("#dlgChq").addEventListener("close",async()=>{
+  if($("#dlgChq").returnValue!=="ok"||!chqProp) return;
+  const sel=[...document.querySelectorAll('#chqBody input:checked')].map(i=>i.value);
+  const cambios={};
+  sel.forEach(m=>{const d=getDoc(unidad,m)||{unidad,mes:m,estado:"abierto",manual:{}}; const man={...(d.manual||{})}, org={...(d.origen||{})};
+    const det={...(d.detalle||{})};
+    Object.keys(MAPEO_CHEQUES).forEach(k=>{man[k]=chqProp.P[m][k]||0; org[k]="cheques"; det[k]=((chqProp.DT[m]||{})[k])||[];});
+    cambios[unidad+':'+m]={...d,detalle:det,manual:man,origen:org,chequesSync:new Date().toISOString()};});
+  if(!sel.length) return;
+  try{ await guardar(cambios); st(`Datos del panel de cheques aplicados: ${sel.map(nombreMes).join(", ")}.`); }catch(_){}
+});
+
+/* ---------- Cash Flow (intereses) ---------- */
+const CF_LINEAS=['prestamos','afip_planes','afip_sct','arba','uom_mor','asimra_mor','andina_mor','despidos','acuerdos'];
+const CF_TIPOS={RENTAS:'arba',UOM:'uom_mor',ASIMRA:'asimra_mor',OSSIMRA:'asimra_mor',ANDINA:'andina_mor'};
+const CF_CORTO={prestamos:'Préstamos',afip_planes:'AFIP Planes',afip_sct:'AFIP Sist. Ctas.',arba:'Mor. ARBA',uom_mor:'Mor. UOM',asimra_mor:'Mor. ASIMRA',andina_mor:'Mor. ANDINA',despidos:'Despidos',acuerdos:'Acuerdos'};
+const norm=s=>String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+function cfNum(v){ if(typeof v==="number") return v; const s=String(v??"").trim(); if(!s||s==="-") return 0; const n=parseNum(s); return Number.isNaN(n)||n==null?0:n; }
+function cfMes(v){
+  if(typeof v==="number"&&v>20000&&v<80000){ const d=XLSX.SSF.parse_date_code(v); return d.y+"-"+String(d.m).padStart(2,"0"); }
+  const s=String(v??"").trim(); let m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/); if(m) return m[3]+"-"+m[2].padStart(2,"0");
+  m=s.match(/^(\d{4})-(\d{2})-\d{2}/); if(m) return m[1]+"-"+m[2];
+  return null;
+}
+function cfEmpresa(v){ const n=norm(v); if(/\bspl\b/.test(n)) return 'spl'; if(n.includes('spotsline')) return 'spotsline'; return null; }
+function cfHoja(wb,nombre){ const k=wb.SheetNames.find(n=>norm(n)===norm(nombre)); if(!k) throw new Error(`No encontré la solapa "${nombre}".`); return XLSX.utils.sheet_to_json(wb.Sheets[k],{header:1,raw:true,defval:null}); }
+function cfFecha(v){ if(typeof v==="number"&&v>20000&&v<80000){const d=XLSX.SSF.parse_date_code(v);return d.y+"-"+String(d.m).padStart(2,"0")+"-"+String(d.d).padStart(2,"0");} return String(v??""); }
+function cfCol(head,nombre,...pats){ const H=head.map(norm); for(const p of pats){ if(p.length===1){ const j=H.indexOf(p[0]); if(j>=0) return j; } } for(const p of pats){ const i=H.findIndex(h=>p.every(w=>h.includes(w))); if(i>=0) return i; } throw new Error(`En "${nombre}" no encontré la columna ${pats[0].join(" ")}.`); }
+function leerCashflow(wb){
+  const R={}, D={}, ign={}, cad={};
+  const add=(u,m,k,v,det)=>{ if(!v) return; ((R[u]=R[u]||{})[m]=R[u][m]||{}); R[u][m][k]=r2((R[u][m][k]||0)+v);
+    (((D[u]=D[u]||{})[m]=D[u][m]||{})[k]=D[u][m][k]||[]).push({...det,v:r2(v)}); };
+  const txt=v=>String(v??"").trim();
+  const recorrer=(hoja,cols,fn)=>{ const rows=cfHoja(wb,hoja), h=rows[0]||[]; const c={}; Object.entries(cols).forEach(([k,p])=>c[k]=cfCol(h,hoja,...p));
+    let ce=-1; try{ ce=cfCol(h,hoja,['estado']); }catch(_){}
+    rows.slice(1).forEach(r=>{ if(!r||r.every(x=>x==null)) return; const u=cfEmpresa(r[c.emp]); const m=cfMes(r[c.vto]);
+      if(!m) return; if(!u){ const n=txt(r[c.emp])||"(vacío)"; ign[n]=(ign[n]||0)+1; return; }
+      if(ce>=0&&norm(r[ce])==="caduco"){ cad[hoja]=(cad[hoja]||0)+1; return; }
+      fn(u,m,r,c,{h:hoja,f:cfFecha(r[c.vto])}); }); };
+  recorrer('Créditos Bancarios',{emp:[['empresa']],vto:[['fecha','vto'],['vencimiento']],fin:[['int','financiero'],['interes','financiero']],res:[['resarcitorio']],banco:[['banco']],cod:[['codigo'],['prestamo']],nc:[['n','cuota'],['nº','cuota']]},
+    (u,m,r,c,b)=>add(u,m,'prestamos',-(cfNum(r[c.fin])+cfNum(r[c.res])),{...b,c:[txt(r[c.banco]),txt(r[c.cod]),txt(r[c.nc])].filter(Boolean).join(' · '),x:`Int. Fin. ${fmtP.format(cfNum(r[c.fin]))} + Int. Res. ${fmtP.format(cfNum(r[c.res]))}`}));
+  recorrer('Planes ARCA',{emp:[['empresa']],vto:[['fecha','vencimiento'],['fecha','vto']],fin:[['interes','financiero'],['int','financiero']],plan:[['plan']],nc:[['cuota','n']]},
+    (u,m,r,c,b)=>add(u,m,'afip_planes',-cfNum(r[c.fin]),{...b,c:['Plan '+txt(r[c.plan]),'cuota '+txt(r[c.nc])].join(' · '),x:`Int. Financiero ${fmtP.format(cfNum(r[c.fin]))}`}));
+  recorrer('Deudas ARCA',{emp:[['empresa']],vto:[['vencimiento'],['fecha','vto']],res:[['resarcitorio']],pun:[['punitorio']],imp:[['impuesto']],con:[['concepto']],per:[['periodo']]},
+    (u,m,r,c,b)=>add(u,m,'afip_sct',-(cfNum(r[c.res])+cfNum(r[c.pun])),{...b,c:[txt(r[c.imp]),txt(r[c.con]),txt(r[c.per])].filter(Boolean).join(' · '),x:`Int. Res. ${fmtP.format(cfNum(r[c.res]))} + Int. Pun. ${fmtP.format(cfNum(r[c.pun]))}`}));
+  recorrer('Planes de Pago',{emp:[['empresa']],vto:[['fecha','vto'],['vencimiento']],tipo:[['tipo']],plan:[['plan']],fin:[['int','financiero'],['interes','financiero']],res:[['resarcitorio']],cuota:[['cuota']],nc:[['n','cuota']]},
+    (u,m,r,c,b)=>{ const tipo=txt(r[c.tipo]).toUpperCase(); const det={...b,c:[tipo,txt(r[c.plan]),txt(r[c.nc])].filter(Boolean).join(' · ')};
+      if(tipo==="SUELDOS"){ add(u,m,'acuerdos',-cfNum(r[c.cuota]),{...det,x:`Cuota ${fmtP.format(cfNum(r[c.cuota]))}`}); return; }
+      const k=CF_TIPOS[tipo]; if(k) add(u,m,k,-(cfNum(r[c.fin])+cfNum(r[c.res])),{...det,x:`Int. Fin. ${fmtP.format(cfNum(r[c.fin]))} + Int. Res. ${fmtP.format(cfNum(r[c.res]))}`}); });
+  recorrer('Desvinculaciones',{emp:[['empresa']],vto:[['fecha','vto'],['vencimiento']],plan:[['plan']],cuota:[['cuota']],nc:[['n','cuota']]},
+    (u,m,r,c,b)=>add(u,m,'despidos',-cfNum(r[c.cuota]),{...b,c:[txt(r[c.plan]),txt(r[c.nc])].filter(Boolean).join(' · '),x:`Cuota ${fmtP.format(cfNum(r[c.cuota]))}`}));
+  // Tarjetas de socios (solapa TDC): se guardan crudas; unidad y tipo de cambio se eligen al aplicar
+  const TDC=[]; try{
+    const rows=cfHoja(wb,'TDC'), h=rows[0]||[]; const c={emp:cfCol(h,'TDC',['empresa']),tar:cfCol(h,'TDC',['tarjeta'],['descripcion']),imp:cfCol(h,'TDC',['importe']),vto:cfCol(h,'TDC',['fecha','vto'],['vencimiento'])};
+    rows.slice(1).forEach(r=>{ if(!r) return; const en=norm(r[c.emp]); const e=en==="socios"?"socios":cfEmpresa(r[c.emp]); if(!e) return; const m=cfMes(r[c.vto]); if(!m) return;
+      const tar=String(r[c.tar]||"").trim(); TDC.push({e,m,f:cfFecha(r[c.vto]),tar,k:e==="socios"?socioDeTarjeta(tar):"tc_corp",usd:/\((usd|uds)\)/i.test(tar),imp:cfNum(r[c.imp])}); });
+  }catch(e){ console.warn(e); }
+  return {R,D,ign,cad,TDC};
+}
+let cfProp=null;
+function tcActual(){ const n=parseNum($("#tdcTc")?$("#tdcTc").value:""); return n&&!Number.isNaN(n)?n:null; }
+// out[grupo][m][k] = filas; grupo = 'socios' | 'spotsline' | 'spl'. usd[grupo][m][k] = dólares
+function tdcFilas(){
+  const tc=tcActual(); const out={}, usd={}, sin=[]; let usdSinTc=0;
+  (cfProp.TDC||[]).forEach(t=>{ if(!t.k){sin.push(t);return;}
+    const g=t.e; let v=t.imp, x=`Importe $${fmtP.format(t.imp)}`;
+    if(t.usd){ (((usd[g]=usd[g]||{})[t.m]=usd[g][t.m]||{})[t.k])=r2((usd[g][t.m][t.k]||0)+t.imp);
+      if(!tc){ usdSinTc+=t.imp; return; } v=t.imp*tc; x=`US$ ${fmtM.format(t.imp)} × TC ${fmtP.format(tc)}`; }
+    (((out[g]=out[g]||{})[t.m]=out[g][t.m]||{})[t.k]=out[g][t.m][t.k]||[]).push({h:t.e==="socios"?'Tarjetas TDC':'TC corporativas',f:t.f,c:t.tar+(t.usd?" (en dólares)":""),x,v:-r2(v)}); });
+  return {out,usd,sin,usdSinTc,tc};
+}
+function celdaTdc(filas,dol){ const ars=(filas||[]).reduce((a,r)=>a+r.v,0);
+  return `<td class="num">${fmtP.format(ars)}${dol?`<br><span class="usd">US$ ${fmtM.format(dol)}</span>`:""}</td>`; }
+function pintarTDC(){
+  const {out,usd,sin,usdSinTc,tc}=tdcFilas(); const u=document.querySelector('input[name="tdcU"]:checked').value;
+  const marcados=uu=>[...document.querySelectorAll('#cfBody input[type=checkbox]')].map(i=>i.value).filter(v=>v.startsWith(uu+"|")).map(v=>v.split("|")[1]);
+  const msS=Object.keys(out.socios||{}).concat(Object.keys(usd.socios||{})).filter((m,i,a)=>a.indexOf(m)===i&&marcados(u).includes(m)).sort().reverse();
+  let h=`<h4>Socios → ${esc(nombreUnidad(u))}</h4>`;
+  h+=msS.length?`<div class="det"><table class="cmp"><thead><tr><th>Mes</th>${SOCIOS.map(k=>`<th class="num">${esc(LINEAS[k].n)}</th>`).join("")}</tr></thead><tbody>${msS.map(m=>`<tr><td>${nombreMes(m)}</td>${SOCIOS.map(k=>celdaTdc(((out.socios||{})[m]||{})[k],((usd.socios||{})[m]||{})[k])).join("")}</tr>`).join("")}</tbody></table></div>`:`<p class="sub">No hay tarjetas de socios en los meses marcados.</p>`;
+  UNIDADES.forEach(x=>{ const ms=Object.keys(out[x.id]||{}).concat(Object.keys(usd[x.id]||{})).filter((m,i,a)=>a.indexOf(m)===i&&marcados(x.id).includes(m)).sort().reverse(); if(!ms.length) return;
+    h+=`<h4>TC corporativas → ${esc(x.n)}</h4><div class="det"><table class="cmp"><thead><tr><th>Mes</th><th class="num">Total en pesos</th><th class="num">De eso, en dólares</th></tr></thead><tbody>${ms.map(m=>{const f=((out[x.id]||{})[m]||{}).tc_corp||[], dol=((usd[x.id]||{})[m]||{}).tc_corp||0;
+      return `<tr><td>${nombreMes(m)}</td><td class="num">${fmtP.format(f.reduce((a,r)=>a+r.v,0))}</td><td class="num">${dol?`US$ ${fmtM.format(dol)}${tc?` = $${fmtP.format(dol*tc)}`:""}`:"–"}</td></tr>`;}).join("")}</tbody></table></div>`; });
+  h+=`<p class="sub">Los valores en dólares se muestran debajo de cada importe. ${tc?`Convertidos a TC ${fmtP.format(tc)}.`:`<strong style="color:var(--yellow)">Sin tipo de cambio: quedan afuera US$ ${fmtM.format(usdSinTc)}.</strong>`} Las tarjetas de socios se suman a los pagos de Odoo de cada socio.${sin.length?` No pude identificar al socio en: ${esc([...new Set(sin.map(t=>t.tar))].join(", "))}.`:""}</p>`;
+  $("#tdcTabla").innerHTML=h;
+}
+async function abrirCashflow(file){
+  try{
+    if(typeof XLSX==="undefined") throw new Error("No se pudo cargar el lector de Excel.");
+    st("Leyendo "+file.name+"…");
+    const wb=XLSX.read(await file.arrayBuffer(),{type:"array"});
+    const {R,D,ign,cad,TDC}=leerCashflow(wb); cfProp={R,D,TDC,file:file.name}; st("");
+    const hoy=new Date(), mesHoy=hoy.getFullYear()+"-"+String(hoy.getMonth()+1).padStart(2,"0");
+    const docMeses=Object.values(docs).map(d=>d.mes).sort(), desde=docMeses[0]||mesHoy;
+    let h="";
+    UNIDADES.forEach(x=>{
+      const datos=R[x.id]||{};
+      const meses=[...new Set([...Object.keys(datos),...mesesDe(x.id)])].filter(m=>m>=desde&&(m<=mesHoy||getDoc(x.id,m))).sort().reverse();
+      h+=`<h3 style="margin:14px 0 6px">${esc(x.n)}</h3>`;
+      if(!meses.length){h+=`<p class="sub">Sin movimientos en el rango.</p>`;return;}
+      h+=`<div class="det" style="overflow-x:auto"><table class="cmp"><thead><tr><th>Mes</th>${CF_LINEAS.map(k=>`<th class="num">${esc(CF_CORTO[k])}</th>`).join("")}</tr></thead><tbody>`;
+      meses.forEach(m=>{const d=getDoc(x.id,m), fr=d&&d.estado==="congelado", nuevo=!d;
+        h+=`<tr><td><label class="chip" style="border:0;padding:0"><input type="checkbox" value="${x.id}|${m}" ${fr?"disabled":(nuevo?"":"checked")}>${fr?LOCK:""}${nombreMes(m)}${nuevo?' <span class="code">(nuevo)</span>':''}</label></td>`+
+          CF_LINEAS.map(k=>{const nv=(datos[m]||{})[k]||0; const cur=d&&!fr?(d.manual||{})[k]:(fr?(d.valores||{})[k]:null); const dif=cur!=null&&Math.abs(cur-nv)>=1;
+            return `<td class="num${dif?" dif":""}">${fmtP.format(nv)}${dif?`<br><span class="code">${fr?"congelado":"antes"} ${fmtP.format(cur)}</span>`:""}</td>`;}).join("")+"</tr>";});
+      h+=`</tbody></table></div>`;
+    });
+    const ignTxt=Object.entries(ign).map(([n,c])=>`${n} (${c})`).join(", ");
+    h+=`<p class="sub" style="margin-top:10px">Se toma lo que vence en cada mes según la fecha de vencimiento. Intereses en negativo (son gastos). Meses congelados no se tocan, pero se muestra la diferencia. Los meses sin datos del EERR vienen desmarcados.${ignTxt?` Filas ignoradas por empresa que no es Spotsline ni SPL: ${esc(ignTxt)}.`:""}${Object.keys(cad).length?` Cuotas excluidas por Estado Caduco: ${esc(Object.entries(cad).map(([h,n])=>h+" ("+n+")").join(", "))}.`:""}</p>`;
+    h+=`<section class="tdcbox"><h3 style="margin:16px 0 4px">Tarjetas (solapa TDC)</h3>
+      <div class="chips" style="align-items:center"><span class="sub" style="margin:0">Tarjetas de socios a:</span>${UNIDADES.map((x,i)=>`<label class="chip"><input type="radio" name="tdcU" value="${x.id}" ${i===0?"checked":""}>${esc(x.n)}</label>`).join("")}
+      <label class="chip">Tipo de cambio US$ <input id="tdcTc" inputmode="decimal" placeholder="ej. 1.450" value="${(()=>{try{return localStorage.getItem('eerr_tc')||""}catch(_){return ""}})()}" style="width:120px;background:var(--paper);border:1px solid #3a3a3a;border-radius:6px;padding:3px 6px;color:var(--ink)"></label></div>
+      <div id="tdcTabla"></div></section>`;
+    $("#cfInfo").textContent=file.name; $("#cfBody").innerHTML=h; pintarTDC();
+    $("#cfBody").querySelectorAll('input[name="tdcU"]').forEach(i=>i.onchange=pintarTDC); $("#tdcTc").oninput=pintarTDC;
+    $("#cfBody").querySelectorAll('input[type=checkbox]').forEach(i=>i.addEventListener("change",pintarTDC));
+    $("#dlgCf").showModal();
+  }catch(e){ st("No se pudo leer el Cash Flow: "+e.message,true); }
+}
+$("#dlgCf").addEventListener("close",async()=>{
+  if($("#dlgCf").returnValue!=="ok"||!cfProp) return;
+  { const T=tdcFilas(); if(!T.tc&&T.usdSinTc&&!confirm(`No cargaste tipo de cambio: quedan afuera US$ ${fmtM.format(T.usdSinTc)} de consumos en dólares. ¿Aplicar igual?`)) return; }
+  const sel=[...document.querySelectorAll('#cfBody input[type=checkbox]:checked')].map(i=>i.value.split("|"));
+  if(!sel.length) return;
+  const cambios={}, now=new Date().toISOString();
+  const tdcU=document.querySelector('input[name="tdcU"]:checked').value, TF=tdcFilas(), tdc=TF.out.socios||{};
+  if(TF.tc){ try{localStorage.setItem('eerr_tc',String(TF.tc).replace(".",","));}catch(_){} }
+  sel.forEach(([u,m])=>{let d=getDoc(u,m)||{unidad:u,mes:m,estado:"abierto",manual:{}};
+    if(u===tdcU){ d={...aplicarGrupoSocios(d,"tdc",tdc[m]||{}),tdcSync:now,tdcTc:TF.tc}; }
+    { const fil=(((TF.out[u]||{})[m]||{}).tc_corp)||[]; const man0={...(d.manual||{})}, org0={...(d.origen||{})}, det0={...(d.detalle||{})};
+      man0.tc_corp=r2(fil.reduce((a,r)=>a+r.v,0)); org0.tc_corp="cashflow"; det0.tc_corp=fil; d={...d,manual:man0,origen:org0,detalle:det0,tdcTc:TF.tc}; }
+    const man={...(d.manual||{})}, org={...(d.origen||{})};
+    const det={...(d.detalle||{})};
+    CF_LINEAS.forEach(k=>{man[k]=((cfProp.R[u]||{})[m]||{})[k]||0; org[k]="cashflow"; det[k]=(((cfProp.D[u]||{})[m]||{})[k])||[];});
+    cambios[u+':'+m]={...d,detalle:det,manual:man,origen:org,cashflowSync:now,cashflowArchivo:cfProp.file};});
+  try{ await guardar(cambios); st(`Datos del Cash Flow aplicados: ${sel.map(([u,m])=>nombreUnidad(u)+" "+nombreMes(m)).join(", ")}.`); }catch(_){}
+  cfProp=null;
+});
+
+/* ---------- Socios ---------- */
+const SOCIOS=['ret_eduardo','ret_facundo','ret_juanma'];
+function socioDePago(p){ const s=String(p??"").trim(); if(s===".") return 'ret_eduardo'; if(s==="..") return 'ret_facundo'; const n=norm(s);
+  if(n.includes('juan manuel')) return 'ret_juanma'; if(n.includes('eduardo')) return 'ret_eduardo'; if(n.includes('facundo')) return 'ret_facundo'; return null; }
+function socioDeTarjeta(t){ const n=" "+norm(t)+" ";
+  if(/ (eduardo|lalo) /.test(n)) return 'ret_eduardo'; if(/ (facu|facundo) /.test(n)) return 'ret_facundo'; if(/ (jm|j|juan manuel) /.test(n)) return 'ret_juanma'; return null; }
+// aplica las filas de un grupo (pagos | tdc) a los socios de un doc, sin tocar el otro grupo
+function aplicarGrupoSocios(d,grupo,filasPorSocio){
+  const man={...(d.manual||{})}, org={...(d.origen||{})}, det={...(d.detalle||{})};
+  SOCIOS.forEach(k=>{ const prev=(org[k]==="socios"?(det[k]||[]):[]).filter(r=>r.g!==grupo);
+    const nuevas=(filasPorSocio[k]||[]).map(r=>({...r,g:grupo})); det[k]=[...prev,...nuevas];
+    man[k]=r2(det[k].reduce((a,r)=>a+r.v,0)); org[k]="socios"; });
+  return {...d,manual:man,origen:org,detalle:det};
+}
+async function abrirPagos(file){
+  try{
+    if(typeof XLSX==="undefined") throw new Error("No se pudo cargar el lector de Excel.");
+    st("Leyendo "+file.name+"…");
+    const wb=XLSX.read(await file.arrayBuffer(),{type:"array"});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:null});
+    const hi=rows.findIndex(r=>(r||[]).some(v=>norm(v)==="cliente proveedor")); if(hi<0) throw new Error('No encontré la columna "Cliente/proveedor". ¿Es el export de Pagos de Odoo?');
+    const h=rows[hi]; const c={p:cfCol(h,'Pagos',['cliente','proveedor']),dia:cfCol(h,'Pagos',['diario']),f:cfCol(h,'Pagos',['fecha']),
+      tot:cfCol(h,'Pagos',['total','pago']),imp:cfCol(h,'Pagos',['importe','firmado'],['cantidad','firmada']),num:cfCol(h,'Pagos',['numero']),est:cfCol(h,'Pagos',['estado'])};
+    let cr=-1; try{cr=cfCol(h,'Pagos',['referencia']);}catch(_){}
+    const R={}, ign={};
+    rows.slice(hi+1).forEach(r=>{ if(!r||r[c.p]==null) return;
+      const k=socioDePago(r[c.p]); const dia=norm(r[c.dia]); const u=dia.includes('spl')?'spl':dia.includes('spotsline')?'spotsline':null; const m=cfMes(r[c.f]);
+      if(!k||!u||!m){ const n=String(r[c.p]).trim()+(u?"":" (sin unidad)"); ign[n]=(ign[n]||0)+1; return; }
+      const imp=Math.abs(cfNum(r[c.tot]))||Math.abs(cfNum(r[c.imp])); if(!imp) return;
+      (((R[u]=R[u]||{})[m]=R[u][m]||{})[k]=R[u][m][k]||[]).push({h:'Pagos Odoo',f:cfFecha(r[c.f]),c:[String(r[c.num]||""),String(r[c.dia]||"").replace(/\s*\(ARS\)\s*/," ").trim(),cr>=0&&r[cr]?"Ref. "+r[cr]:""].filter(Boolean).join(" · "),x:`${String(r[c.p]).trim()} · ${r[c.est]||""}`,v:-r2(imp)});
+    });
+    pagosProp={R,file:file.name};
+    let html="";
+    UNIDADES.forEach(x=>{ const ms=Object.keys(R[x.id]||{}).sort().reverse(); if(!ms.length) return;
+      html+=`<h3 style="margin:12px 0 6px">${esc(x.n)}</h3><div class="det"><table class="cmp"><thead><tr><th>Mes</th>${SOCIOS.map(k=>`<th class="num">${esc(LINEAS[k].n)}</th>`).join("")}<th class="num">Órdenes</th></tr></thead><tbody>`+
+        ms.map(m=>{const d=getDoc(x.id,m), fr=d&&d.estado==="congelado"; const g=R[x.id][m];
+          return `<tr><td><label class="chip" style="border:0;padding:0"><input type="checkbox" value="${x.id}|${m}" ${fr?"disabled":"checked"}>${fr?LOCK:""}${nombreMes(m)}${d?"":' <span class="code">(nuevo)</span>'}</label></td>${SOCIOS.map(k=>`<td class="num">${fmtP.format((g[k]||[]).reduce((a,r)=>a+r.v,0))}</td>`).join("")}<td class="num">${SOCIOS.reduce((a,k)=>a+(g[k]||[]).length,0)}</td></tr>`;}).join("")+`</tbody></table></div>`; });
+    if(!html) html=`<p class="sub">No encontré pagos a socios en el archivo.</p>`;
+    const ig=Object.entries(ign).map(([n,q])=>`${n} (${q})`).join(", ");
+    html+=`<p class="sub" style="margin-top:10px">Se toma Total Pago, incluidas las órdenes "En proceso". Al aplicar se reemplaza solo la parte de pagos de Odoo del mes; las tarjetas quedan como están.${ig?" Filas ignoradas: "+esc(ig)+".":""}</p>`;
+    $("#pagInfo").textContent=file.name; $("#pagBody").innerHTML=html; st("");
+    $("#dlgPag").showModal();
+  }catch(e){ st("No se pudo leer el archivo de pagos: "+e.message,true); }
+}
+let pagosProp=null;
+$("#dlgPag").addEventListener("close",async()=>{
+  if($("#dlgPag").returnValue!=="ok"||!pagosProp) return;
+  const sel=[...document.querySelectorAll('#pagBody input:checked')].map(i=>i.value.split("|")); if(!sel.length) return;
+  const cambios={}, now=new Date().toISOString();
+  sel.forEach(([u,m])=>{ const d=getDoc(u,m)||{unidad:u,mes:m,estado:"abierto",manual:{}}; cambios[u+':'+m]={...aplicarGrupoSocios(d,"pagos",(pagosProp.R[u]||{})[m]||{}),pagosSync:now,pagosArchivo:pagosProp.file}; });
+  try{ await guardar(cambios); st(`Pagos a socios aplicados: ${sel.map(([u,m])=>nombreUnidad(u)+" "+nombreMes(m)).join(", ")}.`); }catch(_){}
+  pagosProp=null;
+});
+
+/* ---------- CMV desde Estadísticas de facturas ---------- */
+const MESES_LARGOS={enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,setiembre:9,octubre:10,noviembre:11,diciembre:12};
+function tipoComp(mov){ const s=String(mov||"").trim(); const m=s.match(/^([A-Z]+)-([A-Z])\b/);
+  if(m) return ({FA:"Facturas",FCE:"Facturas de crédito electrónicas",NC:"Notas de crédito",NCE:"Notas de crédito electrónicas",ND:"Notas de débito",NDE:"Notas de débito electrónicas"}[m[1]]||m[1])+" "+m[2]+` (${m[1]}-${m[2]})`;
+  if(/^\d{4}\/\d{4}\//.test(s)) return "Comprobantes internos (0001/…)"; return s?"Otros ("+s.split(" ")[0]+")":"Sin comprobante"; }
+let cmvProp=null;
+async function abrirCmv(file){
+  try{
+    if(typeof XLSX==="undefined") throw new Error("No se pudo cargar el lector de Excel.");
+    st("Leyendo "+file.name+"… (puede tardar unos segundos)");
+    const wb=XLSX.read(await file.arrayBuffer(),{type:"array"});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:null});
+    const hi=rows.findIndex(r=>(r||[]).some(v=>norm(v)==="valor del inventario")); if(hi<0) throw new Error('No encontré la columna "Valor del inventario". ¿Es el export de Estadísticas de facturas?');
+    const h=rows[hi]; const c={con:cfCol(h,'Estadísticas',['contacto']),emp:cfCol(h,'Estadísticas',['empresa']),inv:cfCol(h,'Estadísticas',['valor','inventario']),
+      ven:cfCol(h,'Estadísticas',['importe','sin','impuestos'],['total','imponible']),mar:cfCol(h,'Estadísticas',['margen']),mov:cfCol(h,'Estadísticas',['movimiento']),prod:cfCol(h,'Estadísticas',['producto'])};
+    const A={}; let mes=null, sinMes=0;
+    rows.slice(hi+1).forEach(r=>{ if(!r) return;
+      if(r[c.emp]==null){ const g=String(r[c.con]||"").trim().toLowerCase().match(/^([a-záéíóú]+)\s+(\d{4})/); if(g&&MESES_LARGOS[g[1]]) mes=g[2]+"-"+String(MESES_LARGOS[g[1]]).padStart(2,"0"); return; }
+      if(!mes){ sinMes++; return; }
+      const u=cfEmpresa(r[c.emp]); if(!u) return;
+      const a=(((A[u]=A[u]||{})[mes])=A[u][mes]||{cmv:0,ventas:0,margen:0,lineas:0,tipos:{},prods:{}});
+      const inv=cfNum(r[c.inv]), ven=cfNum(r[c.ven]);
+      a.cmv+=inv; a.ventas+=ven; a.margen+=cfNum(r[c.mar]); a.lineas++;
+      const tp=tipoComp(r[c.mov]); const T=(a.tipos[tp]=a.tipos[tp]||{v:0,n:0,ven:0}); T.v+=inv; T.n++; T.ven+=ven;
+      if(inv){ const pr=String(r[c.prod]||"(sin producto)").trim(); const P=(a.prods[pr]=a.prods[pr]||{v:0,n:0}); P.v+=inv; P.n++; }
+    });
+    if(!Object.keys(A).length) throw new Error("No encontré meses en el archivo. Exportalo agrupado por mes (como el que usamos).");
+    // filas de detalle para la lupa
+    const det={};
+    Object.entries(A).forEach(([u,ms])=>Object.entries(ms).forEach(([m,a])=>{
+      const filas=Object.entries(a.tipos).sort((x,y)=>x[1].v-y[1].v).map(([tp,T])=>({h:"Por tipo de comprobante",f:"",c:tp,x:`${fmtP.format(T.n)} líneas · ventas $${fmtP.format(T.ven)}`,v:r2(T.v)}));
+      const pr=Object.entries(a.prods).sort((x,y)=>x[1].v-y[1].v), top=pr.slice(0,20), resto=pr.slice(20);
+      top.forEach(([n,P])=>filas.push({h:"Productos (20 de mayor costo + resto)",f:"",c:n,x:`${P.n} líneas`,v:r2(P.v)}));
+      if(resto.length) filas.push({h:"Productos (20 de mayor costo + resto)",f:"",c:`Resto: ${resto.length} productos`,x:"",v:r2(resto.reduce((s,[,P])=>s+P.v,0))});
+      ((det[u]=det[u]||{})[m])=filas; a.cmv=r2(a.cmv); a.ventas=r2(a.ventas); a.margen=r2(a.margen); }));
+    cmvProp={A,det,file:file.name};
+    let html="";
+    UNIDADES.forEach(x=>{ const ms=Object.keys(A[x.id]||{}).sort().reverse(); if(!ms.length) return;
+      html+=`<h3 style="margin:12px 0 6px">${esc(x.n)}</h3><div class="det" style="overflow-x:auto"><table class="cmp"><thead><tr><th>Mes</th><th class="num">CMV</th><th class="num">% s/ventas del reporte</th><th class="num">Valor actual</th><th class="num">Diferencia</th></tr></thead><tbody>`+
+      ms.map(m=>{ const a=A[x.id][m], d=getDoc(x.id,m), fr=d&&d.estado==="congelado"; const cur=d?valorU(x.id,m,LINEAS.cmv).v:null; const dif=cur!=null?a.cmv-cur:null;
+        return `<tr><td><label class="chip" style="border:0;padding:0"><input type="checkbox" value="${x.id}|${m}" ${fr||!d?"":"checked"} ${fr?"disabled":""}>${fr?LOCK:""}${nombreMes(m)}${d?"":' <span class="code">(nuevo)</span>'}</label></td><td class="num">${fmtP.format(a.cmv)}</td><td class="num">${a.ventas?fmtPct.format(-a.cmv/a.ventas):"–"}</td><td class="num">${cur==null?"–":fmtP.format(cur)}${fr?'<br><span class="code">congelado</span>':""}</td><td class="num${dif!=null&&Math.abs(dif)>=1?" dif":""}">${dif==null?"–":fmtP.format(dif)}</td></tr>`; }).join("")+`</tbody></table></div>`; });
+    html+=`<p class="sub" style="margin-top:10px">CMV = suma de "Valor del inventario" de todas las líneas del mes, incluidas notas de crédito (devuelven costo) y comprobantes internos 0001/…. Los meses congelados no se tocan; se muestra la diferencia para comparar.${sinMes?` ${sinMes} líneas sin mes asignado quedaron afuera.`:""}</p>`;
+    $("#cmvInfo").textContent=file.name; $("#cmvBody").innerHTML=html; st("");
+    $("#dlgCmv").showModal();
+  }catch(e){ st("No se pudo leer el archivo de CMV: "+e.message,true); }
+}
+$("#dlgCmv").addEventListener("close",async()=>{
+  if($("#dlgCmv").returnValue!=="ok"||!cmvProp) return;
+  const sel=[...document.querySelectorAll('#cmvBody input[type=checkbox]:checked')].map(i=>i.value.split("|")); if(!sel.length){cmvProp=null;return;}
+  const cambios={}, now=new Date().toISOString();
+  sel.forEach(([u,m])=>{ const d=getDoc(u,m)||{unidad:u,mes:m,estado:"abierto",manual:{}}; const a=cmvProp.A[u][m];
+    cambios[u+':'+m]={...d,manual:{...(d.manual||{}),cmv:a.cmv},origen:{...(d.origen||{}),cmv:"cmv"},detalle:{...(d.detalle||{}),cmv:cmvProp.det[u][m]},cmvSync:now,cmvArchivo:cmvProp.file,cmvInfo:{ventas:a.ventas,margen:a.margen,lineas:a.lineas}}; });
+  try{ await guardar(cambios); st(`CMV aplicado: ${sel.map(([u,m])=>nombreUnidad(u)+" "+nombreMes(m)).join(", ")}.`); }catch(_){}
+  cmvProp=null;
+});
+
+/* ---------- Ayuda ---------- */
+function reglaDe(l){
+  if(l.s==="odoo") return "Odoo, cuenta "+(l.c&&l.c.length?l.c.join(" + "):"(sin cuenta)")+"."+(l.nota?" "+l.nota:"");
+  if(l.rg) return l.rg;
+  if(MAPEO_CHEQUES[l.id]) return "Panel de cheques: "+(MAPEO_CHEQUES[l.id].ops?"costo de las operaciones de venta de cheques del mes (interés + IVA + percepciones + sellos + comisión).":"gastos bancarios de categoría "+MAPEO_CHEQUES[l.id].cats.join(" + ")+", solo los marcados como costo.");
+  return FUENTES[l.s].t+". Por ahora, carga manual."+(l.nota?" "+l.nota:"");
+}
+function renderAyuda(){
+  const el=$("#vistaAyuda");
+  const filas=EST.filter(s=>s.l).map(s=>s.l.map(l=>`<tr><td>${esc(s.t)}</td><td>${esc(l.n)}</td><td>${esc(l.s==="odoo"?"Odoo":FUENTES[l.s].t)}</td><td>${esc(reglaDe(l))}</td></tr>`).join("")).join("");
+  el.innerHTML=`
+<h2>Cómo funciona</h2>
+<nav class="toc" aria-label="Contenido"><a href="#a-mes">Cierre mensual</a><a href="#a-colores">Colores</a><a href="#a-fuentes">Fuentes de cada línea</a><a href="#a-fuentesx">Fuentes externas</a><a href="#a-socios">Socios</a><a href="#a-lupa">Lupa</a><a href="#a-mover">Mover líneas</a><a href="#a-cong">Congelar</a><a href="#a-unid">Unidades</a><a href="#a-exp">Exportar</a><a href="#a-faq">Preguntas frecuentes</a></nav>
+<p>El estado de resultados se arma combinando dos cosas: el <strong>export de Odoo</strong>, que trae todo lo contable, y las <strong>fuentes externas</strong> (líneas celestes), que reemplazan lo que en Odoo no está bien imputado o directamente no está: sueldos, CMV, bancos, intereses, etc. Todo se guarda en Supabase, así que lo que carga una persona lo ve todo el equipo.</p>
+
+<h2 id="a-mes">Cierre de un mes, paso a paso</h2>
+<ol>
+<li><strong>Importar el export de Odoo.</strong> Botón <em>Importar export de Odoo</em>. Elegís la unidad (si el archivo dice "SPL" en el nombre la sugiere sola) y qué meses tomar. Los meses congelados no se pueden pisar.</li>
+<li><strong>Panel de cheques.</strong> Se sincroniza solo al abrir y al tocar <em>Actualizar</em>: completa las líneas de bancos de los meses abiertos (de las dos unidades) dentro del período que cubre el panel. No pisa lo que se haya cargado a mano. El botón <em>Traer del panel de cheques</em> sigue disponible para ver la comparación mes por mes.</li>
+<li><strong>Importar el CMV.</strong> Botón <em>Importar CMV</em> con el export de Odoo «Estadísticas de facturas» agrupado por mes. Suma la columna Valor del inventario (incluye notas de crédito y comprobantes internos 0001/…). En la lupa se ve el CMV por tipo de comprobante y por producto.</li>
+<li><strong>Importar el Cash Flow.</strong> Botón <em>Importar Cash Flow</em> y elegís el Excel <em>Cash Flow SPL - Spotsline</em>. Calcula los intereses de las dos unidades a la vez; marcás los meses y aplicás.</li>
+<li><strong>Completar lo manual.</strong> Lo que queda rayado en amarillo está pendiente. Tocás la celda, y en el panel de la derecha escribís el importe (los gastos en negativo) y guardás.</li>
+<li><strong>Revisar.</strong> Tocando el nombre del mes ves el detalle: qué cuentas de Odoo se reemplazan por fuentes externas y si quedó alguna cuenta de Odoo sin clasificar (eso hay que revisarlo siempre).</li>
+<li><strong>Congelar.</strong> En el detalle del mes, <em>Congelar mes</em>. Desde ahí los números quedan fijos.</li>
+<li><strong>Exportar</strong> a Excel, PDF o CSV.</li>
+</ol>
+
+<h2 id="a-colores">Qué significa cada color</h2>
+<p><span class="ley"><i class="sw odoo"></i>Odoo</span><span class="ley"><i class="sw man"></i>Carga manual</span><span class="ley"><i class="sw sync"></i>Sincronizado (cheques o Cash Flow)</span><span class="ley"><i class="sw pend"></i>Pendiente</span><span class="ley"><i class="sw frozen"></i>Mes congelado</span></p>
+<p>Un <span style="color:var(--pend)">●</span> junto a un total indica que incluye líneas pendientes: el número todavía no es definitivo. Pasando el mouse por una celda se ve de dónde sale.</p>
+
+<h2 id="a-fuentes">De dónde sale cada línea</h2>
+<div class="tbl"><table><thead><tr><th>Bloque</th><th>Línea</th><th>Fuente</th><th>Regla</th></tr></thead><tbody>${filas}</tbody></table></div>
+<h3>Reglas del Cash Flow</h3>
+<ul>
+<li>Siempre se toma <strong>lo que vence en el período</strong>, según la columna de fecha de vencimiento de cada solapa (no la fecha de pago).</li>
+<li>Se toman solo las filas de <strong>Spotsline</strong> y <strong>SPL</strong>. Las filas de otras empresas (por ejemplo, Facundo) se ignoran y el importador avisa cuántas fueron.</li>
+<li>Las cuotas con <strong>Estado "Caduco"</strong> no se toman.</li>
+<li>Despidos salen de la solapa Desvinculaciones y los Acuerdos de Planes de Pago (Tipo SUELDOS), en los dos casos por la columna Cuota.</li>
+<li>Las celdas con "-" o vacías cuentan como cero.</li>
+<li>Al importar, un mes abierto se pisa con lo que trae el archivo en esas líneas; si una línea no tiene vencimientos ese mes, queda en cero.</li>
+</ul>
+
+<h2 id="a-fuentesx">Fuentes externas</h2>
+${Object.entries(FUENTES).map(([k,f])=>`<h3>${esc(f.t)}</h3><p class="muted">${esc(f.q)}</p><ul>${Object.values(LINEAS).filter(l=>l.s===k).map(l=>`<li>${esc(l.n)}${{prod:" (producción)",com:" (comercial)",adm:" (administración)"}[l.b]||""}</li>`).join("")}</ul>`).join("")}
+<h2 id="a-lupa">La lupa: qué está tomando cada número</h2>
+<p>Tocá cualquier número de la tabla (aparece la lupa al pasar el mouse) y se abre un panel a la derecha con el detalle:</p>
+<ul>
+<li><strong>Líneas de Odoo:</strong> las cuentas que suma y el importe de cada una.</li>
+<li><strong>Líneas sincronizadas</strong> (Cash Flow o panel de cheques): cada fila que se tomó, con su vencimiento, el concepto (banco, plan, cuota, persona) y las columnas que se sumaron.</li>
+<li><strong>Cargas manuales:</strong> quién la cargó y cuándo. Desde el mismo panel se puede corregir el valor.</li>
+<li><strong>Totales de bloque y resultados:</strong> qué líneas o bloques los componen; tocando cada uno, se baja al detalle.</li>
+<li><strong>Consolidado:</strong> el detalle de cada unidad por separado.</li>
+</ul>
+<h2 id="a-socios">Retiro de socios</h2>
+<p>Cada socio suma dos fuentes, que se cargan por separado y no se pisan entre sí:</p>
+<ol>
+<li><strong>Órdenes de pago de Odoo.</strong> Botón <em>Importar pagos a socios</em> con el export de Pagos (account.payment). La unidad sale del Diario (SPOTSLINE o SPL DISTRIBUIDORA) y el mes de la Fecha. Se toma la columna Total Pago (los pagos múltiples tienen el importe en cero). "." es Eduardo Porcel, ".." es Facundo Porcel y Juan Manuel figura con su nombre.</li>
+<li><strong>Tarjetas de socios.</strong> Vienen con <em>Importar Cash Flow</em>, solapa TDC, filas con Empresa SOCIOS, por Fecha Vto. La persona sale de la descripción de la tarjeta (EDUARDO o LALO, FACU o FACUNDO, JM o J). Los consumos en dólares se muestran en US$ y se convierten con el tipo de cambio que cargues al importar (queda guardado para la próxima); si lo dejás vacío, no se toman y avisa cuántos dólares quedaron afuera.</li>
+</ol>
+<p><strong>TC corporativas</strong> (en Retiro de socios) sale de la misma solapa TDC, filas con Empresa SPOTSLINE o SPL, con la misma conversión de dólares.</p><ol style="display:none">
+</ol>
+<h2 id="a-mover">Mover líneas entre bloques</h2>
+<p>Arrastrá una línea desde el ⠿ que aparece a la izquierda de su nombre y soltala sobre otra línea (queda arriba de esa) o sobre el título de un bloque (queda al final). También se puede hacer desde la lupa, en <em>Ubicación</em>. El cambio se guarda en Supabase y lo ve todo el equipo. Ventas, CMV e Impuesto a las ganancias no se mueven.</p>
+<p>Si la línea tiene valores en meses congelados, avisa antes: los valores no cambian, pero sí los totales de los bloques y, si la línea cruza el EBITDA, los subtotales de esos meses.</p>
+<p><button class="btn ghost" type="button" id="btnReset">Volver todas las líneas a su ubicación original</button></p>
+<h2 id="a-cong">Congelar y descongelar</h2>
+<p>Un mes congelado guarda una foto de todos sus valores. No cambia aunque se reimporte Odoo, se traigan datos del panel o del Cash Flow, ni se pueden editar celdas. Queda registrado quién lo congeló y cuándo (la primera vez te pregunta el nombre).</p>
+<p>Si hay que corregir algo, <em>Descongelar</em> vuelve el mes a abierto: lo que viene de Odoo se recalcula y el resto queda como carga manual con el valor que tenía, así no se pierde nada. Si se congela con líneas pendientes, esas quedan en cero (te avisa antes).</p>
+
+<h2 id="a-unid">Unidades y consolidado</h2>
+<p>Spotsline y SPL Distribuidora tienen cada una sus propios meses, imports y cargas. <strong>Consolidado</strong> suma las dos línea por línea; es solo de lectura. Un mes figura como congelado en el consolidado cuando lo está en las dos unidades.</p>
+
+<h2 id="a-exp">Exportar</h2>
+<p>Elegís la unidad (o las tres juntas), los meses (con atajos de últimos 3, 6, 12 o solo congelados) y el formato. El <strong>Excel</strong> lleva los subtotales como fórmulas, así se puede seguir trabajando; el <strong>PDF</strong> sale apaisado, una página por unidad; el <strong>CSV</strong> usa punto y coma y coma decimal, para abrirlo directo en Excel en castellano.</p>
+
+<h2 id="a-faq">Preguntas frecuentes</h2>
+<h3>¿Por qué un total tiene un punto amarillo?</h3><p>Porque alguna línea de ese bloque todavía está pendiente.</p>
+<h3>Importé Odoo y un mes no cambió.</h3><p>Seguramente está congelado. Descongelalo, importá de nuevo y volvé a congelar.</p>
+<h3>Arriba dice "Sin conexión a Supabase".</h3><p>Los cambios se están guardando solo en ese navegador. Revisá la conexión y tocá <em>Actualizar</em>. Si persiste, verificá que exista la tabla <code>eerr</code>.</p>
+<h3>¿Puedo cargar un valor a mano en una línea que viene de una fuente?</h3><p>Sí, en meses abiertos. Queda en celeste (manual) hasta la próxima sincronización de esa fuente, que lo vuelve a pisar.</p>
+<p class="muted">Intereses Seguridad e Higiene arranca en 0 y es editable, hasta que tenga fuente.</p>`;
+}
+
+/* ---------- Exportar ---------- */
+function abrirExport(){
+  const ops=[...UNIDADES.map(x=>[x.id,x.n]),['cons','Consolidado'],['todas','Las tres (una hoja o página por unidad)']];
+  $("#expUnidad").innerHTML=ops.map(([id,n])=>`<label class="chip"><input type="radio" name="expU" value="${id}" ${id===unidad?"checked":""}>${esc(n)}</label>`).join("");
+  const pintar=()=>{const u=document.querySelector('input[name="expU"]:checked').value; const ms=mesesDe(u==='todas'?'cons':u);
+    $("#expMeses").innerHTML=ms.map((m,i)=>`<label class="chip"><input type="checkbox" value="${m}" data-fr="${estadoMes(u==='todas'?'cons':u,m)==='congelado'}" ${i<12?"checked":""}>${nombreMes(m)}</label>`).join("")||'<p class="sub">No hay meses.</p>';};
+  pintar(); $("#expUnidad").onchange=pintar;
+  $("#dlgExp").showModal();
+}
+document.querySelector("#dlgExp .quick").addEventListener("click",e=>{const q=e.target.dataset.q; if(!q)return; const cbs=[...document.querySelectorAll("#expMeses input")];
+  cbs.forEach((c,i)=>c.checked= q==="all"?true: q==="none"?false: q==="frozen"?c.dataset.fr==="true": i<+q);});
+function filasExport(u,meses,detalle){
+  const C={}; meses.forEach(m=>C[m]=calcMes(u,m));
+  const out=[]; // {tipo, label, code, vals[], ref?}
+  EST.forEach(s=>{
+    if(s.l){
+      const solo=s.l.length===1&&(s.b==="ventas"||s.b==="imp"||s.b==="cmv");
+      out.push({tipo:"bloque",id:s.b,label:s.t,vals:meses.map(m=>C[m].blo[s.b]),lineas:[]});
+      const b=out[out.length-1];
+      if(detalle&&!solo) s.l.forEach(l=>{out.push({tipo:"linea",id:l.id,label:l.n,code:(l.c||[])[0]||"",vals:meses.map(m=>C[m].lin[l.id].v??0)}); b.lineas.push(out.length-1);});
+    } else out.push({tipo:"sub",id:s.sub,label:s.t,f:s.f,vals:meses.map(m=>C[m].sub[s.sub])});
+  });
+  return out;
+}
+function descargar(blob,nombre){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);}
+function hojaExcel(u,meses,det,tot){
+  const filas=filasExport(u,meses,det), HEAD=3, colIni=2; // A:cuenta B:código C..
+  const titulo=u==='cons'?'Consolidado Spotsline + SPL Distribuidora':(UNIDADES.find(x=>x.id===u).razon);
+  const aoa=[[titulo+" · Estado de resultados"],[`Generado el ${new Date().toLocaleString("es-AR")}. Meses congelados: ${meses.filter(m=>estadoMes(u,m)==="congelado").map(nombreMes).join(", ")||"ninguno"}.`],["Cuenta","Cuenta Odoo",...meses.map(nombreMes),...(tot?["Total"]:[])]];
+  filas.forEach(f=>aoa.push([f.tipo==="linea"?"   "+f.label:f.label.toUpperCase?(f.tipo==="sub"?f.label.toUpperCase():f.label):f.label,f.code||"",...f.vals,...(tot?[f.vals.reduce((a,b)=>a+b,0)]:[])]));
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  const rowOf=i=>HEAD+1+i; // fila Excel (1-based) de filas[i]
+  const idxBy={}; filas.forEach((f,i)=>{if(f.tipo!=="linea")idxBy[f.id]=i;});
+  const nCols=meses.length+(tot?1:0);
+  filas.forEach((f,i)=>{
+    for(let k=0;k<nCols;k++){
+      const col=XLSX.utils.encode_col(colIni+k), addr=col+rowOf(i), cell=ws[addr]; if(!cell) continue;
+      cell.z='#,##0;-#,##0;"–"';
+      if(tot&&k===meses.length){ cell.f=`SUM(${XLSX.utils.encode_col(colIni)}${rowOf(i)}:${XLSX.utils.encode_col(colIni+meses.length-1)}${rowOf(i)})`; continue; }
+      if(f.tipo==="bloque"&&f.lineas.length) cell.f=`SUM(${col}${rowOf(f.lineas[0])}:${col}${rowOf(f.lineas[f.lineas.length-1])})`;
+      if(f.tipo==="sub") cell.f=f.f.map(id=>col+rowOf(idxBy[id])).join("+");
+    }
+  });
+  ws["!cols"]=[{wch:46},{wch:14},...Array(nCols).fill({wch:15})];
+  ws["!freeze"]={xSplit:2,ySplit:3}; ws["!views"]=[{state:"frozen",xSplit:2,ySplit:3}];
+  return ws;
+}
+async function exportar(){
+  const u=document.querySelector('input[name="expU"]:checked').value;
+  let meses=[...document.querySelectorAll("#expMeses input:checked")].map(i=>i.value);
+  if(!meses.length){st("Elegí al menos un mes para exportar.");return;}
+  meses.sort(); if(!$("#expAsc").checked) meses.reverse();
+  const fmtSel=document.querySelector('input[name="fmt"]:checked').value, det=$("#expDet").checked, tot=$("#expTot").checked;
+  const unis=u==='todas'?[...UNIDADES.map(x=>x.id),'cons']:[u];
+  const base=`EERR_${u==='todas'?'todas':nombreUnidad(u).replace(/\s+/g,'_')}_${meses[meses.length-1]>meses[0]?meses[0]+'_a_'+meses[meses.length-1]:meses[meses.length-1]+'_a_'+meses[0]}`;
+  try{
+    if(fmtSel==="xlsx"){
+      if(typeof XLSX==="undefined") throw new Error("no se cargó la librería de Excel");
+      const wb=XLSX.utils.book_new();
+      unis.forEach(x=>XLSX.utils.book_append_sheet(wb,hojaExcel(x,meses.filter(m=>mesesDe(x).includes(m)),det,tot),nombreUnidad(x).slice(0,31)));
+      XLSX.writeFile(wb,base+".xlsx");
+    } else if(fmtSel==="csv"){
+      const n=new Intl.NumberFormat("es-AR",{minimumFractionDigits:2,maximumFractionDigits:2,useGrouping:false});
+      let lines=[["Unidad","Tipo","Cuenta","Cuenta Odoo",...meses.map(nombreMes),...(tot?["Total"]:[])].join(";")];
+      unis.forEach(x=>{const ms=meses; filasExport(x,ms,det).forEach(f=>lines.push([nombreUnidad(x),f.tipo,'"'+f.label.replace(/"/g,'""')+'"',f.code||"",...f.vals.map(v=>n.format(v)),...(tot?[n.format(f.vals.reduce((a,b)=>a+b,0))]:[])].join(";")));});
+      descargar(new Blob(["\ufeff"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"}),base+".csv");
+    } else {
+      if(!window.jspdf) throw new Error("no se cargó la librería de PDF");
+      const {jsPDF}=window.jspdf; const doc=new jsPDF({orientation:"landscape",unit:"pt",format:"a4"});
+      const nf=new Intl.NumberFormat("es-AR",{maximumFractionDigits:0});
+      unis.forEach((x,ix)=>{
+        if(ix) doc.addPage();
+        const ms=meses.filter(m=>mesesDe(x).includes(m)); const filas=filasExport(x,ms,det);
+        doc.setFont("helvetica","bold"); doc.setFontSize(15);
+        doc.text((x==='cons'?'Consolidado Spotsline + SPL Distribuidora':UNIDADES.find(z=>z.id===x).razon)+" · Estado de resultados",36,40);
+        doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(90);
+        doc.text(`Generado el ${new Date().toLocaleString("es-AR")}. Congelados: ${ms.filter(m=>estadoMes(x,m)==="congelado").map(nombreMes).join(", ")||"ninguno"}.`,36,56);
+        doc.setTextColor(0);
+        const fs=ms.length>9?6.5:ms.length>6?7.5:8.5;
+        doc.autoTable({startY:68,margin:{left:30,right:30},styles:{fontSize:fs,cellPadding:2.5,halign:"right",lineColor:[223,228,226],lineWidth:.4},
+          headStyles:{fillColor:[27,42,47],textColor:255,halign:"right"},columnStyles:{0:{halign:"left",cellWidth:ms.length>9?130:170}},
+          head:[["Cuenta",...ms.map(nombreMes),...(tot?["Total"]:[])]],
+          body:filas.map(f=>[(f.tipo==="linea"?"   ":"")+f.label,...f.vals.map(v=>Math.abs(v)<0.5?"–":nf.format(v)),...(tot?[nf.format(f.vals.reduce((a,b)=>a+b,0))]:[])]),
+          didParseCell:(h)=>{ if(h.section!=="body")return; const f=filas[h.row.index];
+            if(f.tipo==="bloque"){h.cell.styles.fillColor=[238,241,239];h.cell.styles.fontStyle="bold";}
+            if(f.tipo==="sub"){h.cell.styles.fontStyle="bold"; if(f.id==="final"){h.cell.styles.fillColor=[27,42,47];h.cell.styles.textColor=255;}}
+            if(f.tipo==="linea") h.cell.styles.textColor=[60,70,74]; }});
+      });
+      doc.save(base+".pdf");
+    }
+    st("Exportado: "+base+"."+fmtSel);
+  }catch(e){ st("No se pudo exportar: "+e.message,true); }
+}
+$("#dlgExp").addEventListener("close",()=>{ if($("#dlgExp").returnValue==="ok") exportar(); });
+
+/* ---------- Eventos ---------- */
+document.addEventListener("click",e=>{
+  const un=e.target.closest("[data-unidad]"); if(un){ if(un.dataset.unidad==='ayuda') vista='ayuda'; else {vista='eerr'; unidad=un.dataset.unidad;} render(); return;}
+  const u=e.target.closest(".seg button"); if(u){medida=u.dataset.u;document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b===u));render();return;}
+  const mb=e.target.closest("[data-mes]"); if(mb){sel=sel===mb.dataset.mes?null:mb.dataset.mes;render();if(sel)$("#detalle").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"nearest"});return;}
+  const ac=e.target.closest("[data-accion]"); if(ac){ (ac.dataset.accion==="congelar"?congelar:descongelar)(unidad,sel).catch(()=>{}); return; }
+  const bl=e.target.closest("tr.bloque:not(.solo)"); if(bl){const b=bl.dataset.b;cerrados.has(b)?cerrados.delete(b):cerrados.add(b);render();return;}
+  const go=e.target.closest("[data-go]"); if(go){ if(go.dataset.goU&&unidad==='cons'){ unidad=go.dataset.goU; render(); }const [m,k,id]=go.dataset.go.split("|"); abrirLupa(m,k,id); return;}
+  if(e.target.closest("#lupaX")){cerrarLupa();return;}
+  if(e.target.closest("#btnReset")){restablecerEstructura();return;}
+  const cc=e.target.closest("td[data-c]"); if(cc){const [m,k,id]=cc.dataset.c.split("|"); abrirLupa(m,k,id); return;}
+  if(!e.target.closest("#pop")) $("#pop").hidden=true;
+});
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("#lupa").hidden){cerrarLupa();return;} const cc=e.target.closest&&e.target.closest("td[data-c]"); if(cc&&(e.key==="Enter"||e.key===" ")){e.preventDefault();const [m,k,id]=cc.dataset.c.split("|");abrirLupa(m,k,id);} if(e.target.id==="cmvLbl"&&(e.key==="Enter"||e.key===" ")){e.preventDefault();$("#cmvFile").click();} if(e.target.id==="pagLbl"&&(e.key==="Enter"||e.key===" ")){e.preventDefault();$("#pagFile").click();} if(e.target.id==="cfLbl"&&(e.key==="Enter"||e.key===" ")){e.preventDefault();$("#cfFile").click();} if(e.target.id==="impLbl"&&(e.key==="Enter"||e.key===" ")){e.preventDefault();$("#imp").click();}});
+$("#imp").addEventListener("change",e=>{const f=e.target.files[0]; if(f)abrirImport(f); e.target.value="";});
+$("#btnExport").onclick=abrirExport;
+let arrastrando=null;
+const tb=$("#tbl tbody");
+tb.addEventListener("dragstart",e=>{ const tr=e.target.closest("tr.linea"); if(!tr) return; if(BLOQUE_FIJO.has(tr.dataset.bl)){e.preventDefault();return;}
+  arrastrando=tr.dataset.linea; tr.classList.add("arrastrando"); e.dataTransfer.effectAllowed="move"; try{e.dataTransfer.setData("text/plain",arrastrando);}catch(_){} });
+tb.addEventListener("dragend",()=>{ arrastrando=null; document.querySelectorAll(".arrastrando,.drop-antes,.drop-dentro").forEach(x=>x.classList.remove("arrastrando","drop-antes","drop-dentro")); });
+function destinoDrop(e){ const tr=e.target.closest("tr"); if(!tr||!arrastrando) return null;
+  if(tr.classList.contains("linea")&&!BLOQUE_FIJO.has(tr.dataset.bl)) return {tr,b:tr.dataset.bl,antes:tr.dataset.linea,cls:"drop-antes"};
+  if(tr.dataset.drop&&!BLOQUE_FIJO.has(tr.dataset.drop)) return {tr,b:tr.dataset.drop,antes:null,cls:"drop-dentro"};
+  return null; }
+tb.addEventListener("dragover",e=>{ const d=destinoDrop(e); if(!d) return; e.preventDefault(); e.dataTransfer.dropEffect="move";
+  document.querySelectorAll(".drop-antes,.drop-dentro").forEach(x=>x.classList.remove("drop-antes","drop-dentro")); d.tr.classList.add(d.cls); });
+tb.addEventListener("drop",e=>{ const d=destinoDrop(e); if(!d) return; e.preventDefault(); const id=arrastrando; arrastrando=null;
+  document.querySelectorAll(".arrastrando,.drop-antes,.drop-dentro").forEach(x=>x.classList.remove("arrastrando","drop-antes","drop-dentro"));
+  if(cerrados.has(d.b)) cerrados.delete(d.b); moverLinea(id,d.b,d.antes); });
+$("#cmvFile").addEventListener("change",e=>{const f=e.target.files[0]; if(f)abrirCmv(f); e.target.value="";});
+$("#pagFile").addEventListener("change",e=>{const f=e.target.files[0]; if(f)abrirPagos(f); e.target.value="";});
+$("#cfFile").addEventListener("change",e=>{const f=e.target.files[0]; if(f)abrirCashflow(f); e.target.value="";});
+$("#btnCheques").onclick=abrirCheques;
+$("#btnRecargar").onclick=()=>{st("Actualizando…");cargarTodo();};
+
+cargarTodo();
+</script>
+</body>
+</html>
