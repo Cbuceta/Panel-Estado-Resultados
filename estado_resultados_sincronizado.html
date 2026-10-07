@@ -435,7 +435,7 @@ const remoto={
   async cargar(){
     const r=await fetch(`${SUPABASE_URL}/rest/v1/${TABLA_EERR}?select=id,valor,updated_at`,{headers:supaHeaders()});
     if(!r.ok) throw new Error('HTTP '+r.status+' '+(await r.text().catch(()=>'')).slice(0,200));
-    const rows=await r.json(); const out={}; rows.forEach(x=>{ if(x.valor) out[x.id]=x.valor; }); return out;
+    const rows=await r.json(); const out={}; rows.forEach(x=>{ if(x.valor && x.id!==FILA_RESUMEN) out[x.id]=x.valor; }); return out;
   },
   async guardar(lista){ // [{id, valor}]
     const now=new Date().toISOString();
@@ -540,6 +540,35 @@ function estadoMes(u,m){
 }
 const LOCK='<svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="8" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
 
+/* ---------- Resumen para el Panel General ---------- */
+// Se guarda en la misma tabla, en la fila "resumen_v1". Toma el ÚLTIMO MES CONGELADO de cada
+// unidad (si no hay ninguno congelado, el último mes cargado) y usa los mismos cálculos de este panel.
+const FILA_RESUMEN='resumen_v1';
+let ultimoResumen='', timerResumen=null;
+function construirResumen(){
+  const out={generado:new Date().toISOString()};
+  [['spotsline','spotsline'],['spl','spl'],['todas','cons']].forEach(([bucket,u])=>{
+    const ids=mesesDe(u); if(!ids.length) return;
+    const m=ids.find(x=>estadoMes(u,x)==='congelado')||ids[0];
+    const c=calcMes(u,m);
+    out[bucket]={mes:m,estado:estadoMes(u,m),ventas:c.blo.ventas||0,bruta:c.sub.bruta||0,ebitda:c.sub.ebitda||0,final:c.sub.final||0,pendientes:c.pend};
+  });
+  return out;
+}
+function programarResumen(){
+  if(store!==remoto) return; // solo si estamos conectados a Supabase
+  clearTimeout(timerResumen);
+  timerResumen=setTimeout(async()=>{
+    try{
+      const r=construirResumen();
+      const firma=JSON.stringify({...r,generado:undefined});
+      if(firma===ultimoResumen) return; // nada cambió: no se vuelve a guardar
+      ultimoResumen=firma;
+      await remoto.guardar([{id:FILA_RESUMEN,valor:r}]);
+    }catch(e){ console.error('No se pudo publicar el resumen para el Panel General',e); ultimoResumen=''; }
+  },1500);
+}
+
 /* ---------- Render ---------- */
 function renderUnidades(){
   $("#unidades").innerHTML=[...UNIDADES.map(x=>[x.id,x.n]),['cons','Consolidado'],['ayuda','Ayuda']].map(([id,n])=>`<button data-unidad="${id}" aria-pressed="${id==='ayuda'?vista==='ayuda':(vista==='eerr'&&unidad===id)}"${id==='ayuda'?' style="margin-left:auto"':''}>${esc(n)}</button>`).join("");
@@ -548,6 +577,7 @@ function renderUnidades(){
   $("#desc").textContent= ro?"Suma línea por línea de Spotsline y SPL Distribuidora. Para cargar o congelar, entrá a cada unidad.":"Lo contable sale del export de Odoo; las líneas celestes se cargan desde su propia fuente. Los meses congelados quedan fijos.";
 }
 function render(){
+  programarResumen();
   renderUnidades();
   if(vista==='ayuda'){ renderAyuda(); return; }
   const ids=mesesDe(unidad);
