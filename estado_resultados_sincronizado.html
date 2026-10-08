@@ -173,6 +173,8 @@ header.top{padding:14px 18px;margin:-26px calc(-1*clamp(14px,3vw,36px)) 18px;bac
 .delta.up{background:var(--pos-bg);color:var(--pos)} .delta.down{background:var(--neg-bg);color:var(--neg)}
 .kpi.hero .delta{background:rgba(0,0,0,.12);color:var(--yellow-ink)}
 .badge{font-size:11px;padding:1px 7px;border-radius:99px;background:var(--pend-bg);color:var(--yellow)}
+.kbtn{border:0;cursor:pointer;font:inherit;font-size:11px}
+.kpi.hero .t .lock{width:10px;height:10px;margin-right:2px}
 .kpi.hero .badge{background:rgba(0,0,0,.15);color:var(--yellow-ink)}
 /* Filas: jerarquía visual */
 .eerr thead th{background:#141414;border-bottom:2px solid var(--yellow)}
@@ -306,6 +308,12 @@ td.al-falta .al-mk{color:var(--neg);font-size:12px}
 .ped-pegar{border:1px dashed var(--yellow);border-radius:10px;padding:10px 12px;margin-bottom:12px}
 .ped-prev{font-size:12.5px;margin-top:6px;display:flex;flex-direction:column;gap:2px}
 .pend-mes{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+.pend-mes.foco{border-left:3px solid var(--yellow);padding-left:10px}
+.pend-u{font-size:14px;color:var(--yellow);margin:14px 0 0;text-transform:uppercase;letter-spacing:.05em}
+.prog{height:6px;border-radius:99px;background:#2a2a2a;overflow:hidden;margin:6px 0 4px}
+.prog span{display:block;height:100%;background:var(--yellow)}
+.prog-t{margin:0 0 6px!important}
+.lnk.warn{border-color:#5a2620;color:var(--neg)}
 .pend-mes:first-of-type{border-top:0;margin-top:0}
 .pend-mes h3{font-size:15px;margin:0 0 4px;display:flex;justify-content:space-between;gap:8px}
 .fuente h4{margin:0;font-size:13.5px}
@@ -359,8 +367,8 @@ td.al-falta .al-mk{color:var(--neg);font-size:12px}
 <div class="alertbar" id="alertBar" hidden></div>
 <div class="tablebox"><table class="eerr" id="tbl"><thead></thead><tbody></tbody></table></div>
 <div class="grid2">
-  <section class="panel" id="detalle"></section>
   <section class="panel" id="fuentes"></section>
+  <section class="panel" id="detalle"></section>
 </div>
 </div>
 <article id="vistaAyuda" class="ayuda" hidden></article>
@@ -759,13 +767,14 @@ function celdaLinea(m,l,C){
 }
 function renderKpis(ids,C){
   const el=$("#kpis"); if(!ids.length){el.innerHTML="";return;}
-  const m=sel&&ids.includes(sel)?sel:ids[0], i=ids.indexOf(m), prev=ids[i+1], c=C[m], cp=prev?C[prev]:null;
+  const ultCierre=ids.find(x=>estadoMes(unidad,x)==="congelado"); const elegido=sel&&ids.includes(sel);
+  const m=elegido?sel:(ultCierre||ids[0]), i=ids.indexOf(m), prev=ids[i+1], c=C[m], cp=prev?C[prev]:null;
   const ventas=c.blo.ventas||0, pct=v=>ventas?fmtPct.format(v/ventas):"–";
   const delta=(v,pv)=>{ if(pv==null) return ""; const d=v-pv; if(Math.abs(d)<0.5) return ""; return `<span class="delta ${d>0?"up":"down"}" title="vs ${nombreMes(prev)}">${d>0?"▲":"▼"} ${fmtM.format(Math.abs(d)/1e6)}M</span>`; };
   const fr=estadoMes(unidad,m)==="congelado";
   const card=(cls,t,v,s)=>`<div class="kpi ${cls}"><span class="t">${t}</span><span class="v ${v<0?"neg":v>0?"pos":""}">${v<0?"-":""}$${fmtP.format(Math.abs(v))}</span><span class="s">${s}</span></div>`;
   el.innerHTML=
-    card("hero",`Resultado final · ${nombreMes(m)}`,c.sub.final,`${pct(c.sub.final)} de ventas ${delta(c.sub.final,cp&&cp.sub.final)} ${fr?"· congelado":c.pend?`<span class="badge">● ${c.pend} pendientes</span>`:""} ${(()=>{const n=Object.values(ALERTAS[m]||{}).filter(a=>!a.rev).length; return n?`<span class="badge" data-alertas="${m}" style="cursor:pointer">⚠ ${n} alertas</span>`:"";})()}`)+
+    card("hero",elegido?`Resultado final · ${nombreMes(m)}${fr?"":" (abierto)"}`:(ultCierre?`${LOCK} Último cierre · ${nombreMes(m)}`:`Resultado final · ${nombreMes(m)} (sin meses cerrados)`),c.sub.final,`${pct(c.sub.final)} de ventas ${delta(c.sub.final,cp&&cp.sub.final)} ${elegido&&ultCierre&&sel!==ultCierre?`<button type="button" class="badge kbtn" data-volver-cierre="1">Ver último cierre</button>`:""} ${fr?"":c.pend?`<span class="badge">● ${c.pend} pendientes</span>`:""} ${(()=>{const n=Object.values(ALERTAS[m]||{}).filter(a=>!a.rev).length; return n?`<span class="badge" data-alertas="${m}" style="cursor:pointer">⚠ ${n} alertas</span>`:"";})()}`)+
     card("","Ventas netas",ventas,delta(ventas,cp&&cp.blo.ventas)||"&nbsp;")+
     card("","Ganancia bruta",c.sub.bruta,`margen ${pct(c.sub.bruta)} ${delta(c.sub.bruta,cp&&cp.sub.bruta)}`)+
     card("","EBITDA",c.sub.ebitda,`${pct(c.sub.ebitda)} de ventas ${delta(c.sub.ebitda,cp&&cp.sub.ebitda)}`);
@@ -777,21 +786,26 @@ function srcTxt(x,l){
 function renderFuentes(ids,C){
   const el=$("#fuentes");
   const unis=unidad==='cons'?UNIDADES.map(x=>x.id):[unidad];
-  let h=`<h2>Pendiente de completar</h2>`;
+  let h=`<h2>Meses abiertos: qué falta cargar</h2><p class="sub">Arriba, las tarjetas muestran el último mes cerrado (con candado). Acá, lo que todavía falta en los meses en curso.</p>`;
   unis.forEach(u=>{
     const ms=mesesDe(u).filter(m=>estadoMes(u,m)!=="congelado");
-    if(!ms.length){ h+=`<p class="sub">${esc(nombreUnidad(u))}: no hay meses abiertos.</p>`; return; }
-    const m=(sel&&ms.includes(sel))?sel:ms[0], c=calcMes(u,m);
-    const falt=Object.values(LINEAS).filter(l=>c.lin[l.id].v==null&&l.s!=="formula");
-    h+=`<div class="pend-mes"><h3>${esc(nombreUnidad(u))} · ${nombreMes(m)} <span class="pill${falt.length?"":" ok"}">${falt.length?falt.length+" pendientes":"Completo"}</span></h3>`;
-    if(!falt.length){ h+=`<p class="sub">Todas las líneas tienen dato. Revisá el detalle y congelalo.</p></div>`; return; }
-    const grupos={}; falt.forEach(l=>{const k=l.s==="odoo"?"odoo":l.s;(grupos[k]=grupos[k]||[]).push(l);});
-    Object.entries(grupos).forEach(([k,ls])=>{
-      h+=`<div class="fuente"><h4>${esc(k==="odoo"?"Export de Odoo":FUENTES[k].t)}</h4><span class="tag">${esc(k==="odoo"?"Falta importar el export de Odoo de este mes.":FUENTES[k].q)}</span><ul class="pend-list">${ls.map(l=>`<li><button type="button" class="lnk" data-go-u="${u}" data-go="${m}|l|${l.id}">${esc(l.n)}${{prod:" (producción)",com:" (comercial)",adm:" (administración)"}[l.b]||""}</button></li>`).join("")}</ul></div>`;
+    if(unidad==='cons') h+=`<h3 class="pend-u">${esc(nombreUnidad(u))}</h3>`;
+    if(!ms.length){ h+=`<p class="sub">No hay meses abiertos${unidad==='cons'?"":" en "+esc(nombreUnidad(u))}.</p>`; return; }
+    ms.forEach((m,ix)=>{
+      const c=calcMes(u,m); const lin=Object.values(LINEAS).filter(l=>l.s!=="formula");
+      const falt=lin.filter(l=>c.lin[l.id].v==null), ok=lin.length-falt.length, pct=Math.round(ok/lin.length*100);
+      const ceros=Object.values(alertasMes(u,m)).filter(a=>a.tipo==="falta"&&a.cero&&!a.rev);
+      h+=`<div class="pend-mes${sel===m?" foco":""}"><h3><span>${nombreMes(m)} <span class="code">${ix===0?"en curso":"abierto"}</span></span><span class="pill${falt.length||ceros.length?"":" ok"}">${falt.length?falt.length+" sin cargar":ceros.length?"Revisar "+ceros.length:"Completo"}</span></h3>
+        <div class="prog" title="${ok} de ${lin.length} líneas con dato"><span style="width:${pct}%"></span></div><p class="sub prog-t">${ok} de ${lin.length} líneas con dato (${pct}%) · <button type="button" class="lnk" data-ver-mes="${u}|${m}">Ver en la tabla</button></p>`;
+      if(!falt.length&&!ceros.length){ h+=`<p class="sub">Todas las líneas tienen dato. Revisá las alertas y congelalo.</p></div>`; return; }
+      const grupos={}; falt.forEach(l=>{const k=l.s==="odoo"?"odoo":l.s;(grupos[k]=grupos[k]||[]).push(l);});
+      Object.entries(grupos).forEach(([k,ls])=>{
+        h+=`<div class="fuente"><h4>${esc(k==="odoo"?"Export de Odoo":FUENTES[k].t)} <span class="code">(${ls.length})</span></h4><span class="tag">${esc(k==="odoo"?"Falta importar el export de Odoo de este mes.":FUENTES[k].q)}</span><ul class="pend-list">${ls.map(l=>`<li><button type="button" class="lnk" data-go-u="${u}" data-go="${m}|l|${l.id}">${esc(l.n)}${{prod:" (producción)",com:" (comercial)",adm:" (administración)"}[l.b]||""}</button></li>`).join("")}</ul></div>`;
+      });
+      if(ceros.length) h+=`<div class="fuente"><h4 style="color:var(--neg)">⚠ En cero, pero siempre tienen valor <span class="code">(${ceros.length})</span></h4><span class="tag">Tienen dato, pero da cero cuando los meses anteriores no. Revisá si falta registrarlo.</span><ul class="pend-list">${ceros.map(a=>`<li><button type="button" class="lnk warn" data-go-u="${u}" data-go="${m}|l|${a.id}">${esc(LINEAS[a.id].n)}</button></li>`).join("")}</ul></div>`;
+      h+=`</div>`;
     });
-    h+=`</div>`;
   });
-  h+=`<p class="sub" style="margin-top:10px">Muestra el mes elegido en la tabla o, si no elegiste ninguno, el último mes abierto. La lista completa de fuentes está en Ayuda.</p>`;
   el.innerHTML=h;
 }
 function renderDetalle(){
@@ -1620,6 +1634,8 @@ document.addEventListener("click",e=>{
   const mb=e.target.closest("[data-mes]"); if(mb){sel=sel===mb.dataset.mes?null:mb.dataset.mes;render();if(sel)$("#detalle").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"nearest"});return;}
   const ac=e.target.closest("[data-accion]"); if(ac){ (ac.dataset.accion==="congelar"?congelar:descongelar)(unidad,sel).catch(()=>{}); return; }
   const bl=e.target.closest("tr.bloque:not(.solo)"); if(bl){const b=bl.dataset.b;cerrados.has(b)?cerrados.delete(b):cerrados.add(b);render();return;}
+  if(e.target.closest("[data-volver-cierre]")){ sel=null; render(); return; }
+  const vm=e.target.closest("[data-ver-mes]"); if(vm){ const [u,m]=vm.dataset.verMes.split("|"); if(unidad==='cons') unidad=u; sel=m; render(); document.querySelector(`th.mes button[data-mes="${m}"]`)?.scrollIntoView({block:"nearest",inline:"center"}); return; }
   const alb=e.target.closest("[data-alertas]"); if(alb){abrirAlertas(alb.dataset.alertas);return;}
   const go=e.target.closest("[data-go]"); if(go){ if(go.dataset.goU&&unidad==='cons'){ unidad=go.dataset.goU; render(); }const [m,k,id]=go.dataset.go.split("|"); abrirLupa(m,k,id); return;}
   if(e.target.closest("#lupaX")){cerrarLupa();return;}
